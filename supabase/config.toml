@@ -1,0 +1,2 @@
+[functions.purge-resumes]
+verify_jwt = false
