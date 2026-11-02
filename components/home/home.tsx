@@ -4,11 +4,7 @@ import { useRef, useState } from "react";
 import {
   ArrowUpRight,
   ArrowDown,
-  Cog,
-  ScanLine,
-  Layers3,
   Wrench,
-  BriefcaseBusiness,
   MapPin,
   Plus,
   Minus,
@@ -16,6 +12,7 @@ import {
   BookOpen,
   GraduationCap,
   Award,
+  Layers3,
 } from "lucide-react";
 import * as Accordion from "@radix-ui/react-accordion";
 import { gsap } from "gsap";
@@ -27,16 +24,32 @@ import { DrawSVGPlugin } from "gsap/DrawSVGPlugin";
 import { useLanguage } from "@/components/layout/provider";
 import { SiteShell } from "@/components/layout/site-shell";
 import { Button } from "@/components/ui/button";
+import { Container, Eyebrow, Index } from "@/components/ui/swiss";
+import { IsoArt } from "@/components/iso/iso-art";
+import { useIsoDraw } from "@/components/iso/use-iso-draw";
+import type { SceneName } from "@/components/iso/scenes";
 import { type Job } from "@/lib/jobs";
+import { cn } from "@/lib/utils";
 import { Testimonials } from "@/components/home/testimonials";
 gsap.registerPlugin(useGSAP, ScrollTrigger, SplitText, Observer, DrawSVGPlugin);
-const icons: Record<string, typeof Cog> = {
-  Machining: Cog,
-  Fabrication: ScanLine,
-  Assembly: Wrench,
-  Finishing: Layers3,
-  Office: BriefcaseBusiness,
+
+const departmentArt: Record<string, SceneName> = {
+  Machining: "machining",
+  Fabrication: "fabrication",
+  Assembly: "assembly",
+  Finishing: "finishing",
+  Office: "office",
 };
+const qualificationIcons = [
+  BookOpen,
+  BookOpen,
+  Wrench,
+  Award,
+  GraduationCap,
+  Layers3,
+];
+const journeyArt: SceneName[] = ["apply", "call", "join"];
+
 export function JobCard({
   job,
   index = 0,
@@ -49,159 +62,208 @@ export function JobCard({
   selected?: boolean;
 }) {
   const { t } = useLanguage();
-  const Icon = icons[job.department] || BriefcaseBusiness;
+  const action =
+    "flex min-h-11 w-full items-center justify-between text-sm font-semibold text-brand-blue after:absolute after:inset-0 after:content-[''] focus-visible:outline-none";
   return (
     <article
       data-job-card
-      className={`group flex h-full flex-col rounded-2xl border p-6 transition-colors hover:border-brand-blue md:p-7 ${selected ? "border-brand-blue bg-blue-50" : "border-ink/10 bg-white"}`}
+      className={cn(
+        "group relative flex h-full flex-col rounded-xs border p-6 transition-[border-color,background-color] duration-200 has-focus-visible:outline-2 has-focus-visible:outline-offset-2 has-focus-visible:outline-brand-orange md:p-7",
+        selected
+          ? "iso-on-soft border-brand-blue bg-brand-blue-soft"
+          : "iso-on-white border-ink/10 bg-white hover:border-brand-blue/50",
+      )}
     >
-      <div className="mb-8 flex items-center justify-between gap-2">
-        <span className="flex size-12 shrink-0 items-center justify-center rounded-xl bg-paper text-brand-blue">
-          <Icon strokeWidth={1.5} />
+      <div className="flex items-center justify-between gap-2 font-mono text-[11px] uppercase tracking-wider text-brand-grey">
+        <span>
+          <span className="text-brand-orange">
+            {String(index + 1).padStart(2, "0")}
+          </span>{" "}
+          / {t.dept[job.department] || job.department}
         </span>
-        <span className="text-[11px] font-semibold tracking-wider text-brand-grey">
-          {String(index + 1).padStart(2, "0")} /{" "}
-          {t.dept[job.department] || job.department}
-        </span>
+        <span
+          aria-hidden="true"
+          className={cn(
+            "size-2 transition-colors",
+            selected
+              ? "bg-brand-orange"
+              : "bg-ink/15 group-hover:bg-brand-orange",
+          )}
+        />
       </div>
-      <h3 className="text-xl font-bold leading-snug tracking-tight">
+      <div className="my-7 flex h-24 items-center justify-center">
+        <IsoArt
+          name={departmentArt[job.department] ?? "office"}
+          className="h-full w-auto max-w-full"
+        />
+      </div>
+      <h3 className="text-xl font-semibold leading-snug tracking-tight">
         {t.jobTitles[job.title] || job.title}
       </h3>
-      <p className="mt-3 text-sm leading-relaxed text-brand-grey">
+      <p className="mt-2 text-sm leading-relaxed text-brand-grey">
         {t.highlights[job.highlight] || job.highlight}
       </p>
       {job.eligibility && (
-        <p className="mt-3 text-sm text-brand-grey">{job.eligibility}</p>
+        <p className="mt-2 text-sm text-brand-grey">{job.eligibility}</p>
       )}
-      <div className="mb-6 mt-5 flex items-center gap-2 text-xs text-brand-grey">
-        <MapPin size={13} />
+      <div className="mb-5 mt-5 flex items-center gap-2 font-mono text-[11px] text-brand-grey">
+        <MapPin size={13} aria-hidden="true" />
         {job.location || t.locationPending}
         {job.job_type ? ` · ${job.job_type}` : ""}
       </div>
-      <div className="mt-auto border-t border-ink/10 pt-4">
+      <div className="mt-auto border-t border-ink/10 pt-3">
         {onSelect ? (
-          <button
-            onClick={onSelect}
-            className="flex min-h-11 w-full items-center justify-between text-sm font-bold text-brand-blue"
-          >
+          <button onClick={onSelect} className={action}>
             {selected ? <Check size={18} /> : t.select}
-            <ArrowUpRight size={20} />
+            <ArrowSquare active={selected} />
           </button>
         ) : (
-          <Link
-            className="flex min-h-11 items-center justify-between text-sm font-bold text-brand-blue decoration-brand-orange underline-offset-8 group-hover:underline"
-            href={`/careers?job=${job.slug}`}
-          >
+          <Link className={action} href={`/careers?job=${job.slug}`}>
             {t.apply}
-            <ArrowUpRight size={20} />
+            <ArrowSquare />
           </Link>
         )}
       </div>
     </article>
   );
 }
+
+function ArrowSquare({ active = false }: { active?: boolean }) {
+  return (
+    <span
+      aria-hidden="true"
+      className={cn(
+        "flex size-9 items-center justify-center rounded-xs transition-colors duration-200",
+        active
+          ? "bg-brand-orange text-ink"
+          : "bg-paper text-brand-blue group-hover:bg-brand-orange group-hover:text-ink",
+      )}
+    >
+      <ArrowUpRight size={18} />
+    </span>
+  );
+}
+
 export function Faq({ mini = false }: { mini?: boolean }) {
   const { t } = useLanguage();
   const [active, setActive] = useState("");
   return (
     <section
       id="faq"
-      className="grid scroll-mt-6 gap-10 bg-white px-4 py-20 md:grid-cols-[0.9fr_1.1fr] md:px-8 xl:px-16 xl:py-28"
+      className={cn(
+        "scroll-mt-24 py-20 xl:py-28",
+        mini ? "bg-white" : "bg-paper",
+      )}
     >
-      <div>
-        <p className="mb-5 text-xs font-bold tracking-[0.2em] text-brand-blue">
-          {t.faq}
-        </p>
-        <h2 className="text-3xl font-bold leading-tight tracking-tight md:text-5xl">
-          {t.questions}
-          <br />
-          <span className="text-brand-grey">{t.answers}</span>
-        </h2>
-      </div>
-      <Accordion.Root
-        type="single"
-        collapsible
-        value={active}
-        onValueChange={setActive}
-      >
-        {t.faqItems.slice(0, mini ? 3 : 6).map(([q, a], i) => (
-          <Accordion.Item
-            key={i}
-            value={String(i)}
-            className="border-b border-ink/15"
+      <Container className="grid gap-10 lg:grid-cols-12">
+        <div className="lg:col-span-5">
+          <Eyebrow>{t.faq}</Eyebrow>
+          <h2 className="mt-6 text-4xl font-semibold leading-[1.05] tracking-[-0.03em] md:text-5xl">
+            {t.questions}
+            <br />
+            <span className="text-brand-grey">{t.answers}</span>
+          </h2>
+          <div
+            className={cn(
+              "mt-14 hidden w-full max-w-60 lg:block",
+              mini ? "iso-on-white" : "iso-on-paper",
+            )}
           >
-            <Accordion.Header>
-              <Accordion.Trigger className="flex min-h-16 w-full items-center justify-between gap-6 py-5 text-left text-sm font-semibold md:text-base">
-                {q}
-                <span className="shrink-0 text-brand-blue">
-                  {active === String(i) ? (
-                    <Minus size={18} />
-                  ) : (
-                    <Plus size={18} />
-                  )}
-                </span>
-              </Accordion.Trigger>
-            </Accordion.Header>
-            <Accordion.Content className="pb-6 pr-8 text-sm leading-7 text-brand-grey">
-              {a}
-            </Accordion.Content>
-          </Accordion.Item>
-        ))}
-      </Accordion.Root>
+            <IsoArt name="cubes" />
+          </div>
+        </div>
+        <Accordion.Root
+          type="single"
+          collapsible
+          value={active}
+          onValueChange={setActive}
+          className="border-t border-ink/15 lg:col-span-7"
+        >
+          {t.faqItems.slice(0, mini ? 3 : 6).map(([q, a], i) => (
+            <Accordion.Item
+              key={i}
+              value={String(i)}
+              className="border-b border-ink/15"
+            >
+              <Accordion.Header>
+                <Accordion.Trigger className="group grid min-h-18 w-full grid-cols-[2.5rem_1fr_auto] items-center gap-4 py-5 text-left text-base font-semibold tracking-tight focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-orange md:text-lg">
+                  <Index value={i + 1} className="text-brand-orange" />
+                  {q}
+                  <span
+                    className={cn(
+                      "flex size-9 shrink-0 items-center justify-center rounded-xs border transition-colors duration-200",
+                      active === String(i)
+                        ? "border-brand-blue bg-brand-blue text-white"
+                        : "border-ink/15 text-brand-blue group-hover:border-brand-blue",
+                    )}
+                  >
+                    {active === String(i) ? (
+                      <Minus size={16} />
+                    ) : (
+                      <Plus size={16} />
+                    )}
+                  </span>
+                </Accordion.Trigger>
+              </Accordion.Header>
+              <Accordion.Content className="pb-6 pl-14 pr-12 text-sm leading-7 text-brand-grey">
+                {a}
+              </Accordion.Content>
+            </Accordion.Item>
+          ))}
+        </Accordion.Root>
+      </Container>
     </section>
   );
 }
+
 export function Home({ jobs }: { jobs: Job[] }) {
   const { t, language } = useLanguage();
   const root = useRef<HTMLDivElement>(null);
   const [paused, setPaused] = useState(false);
   const marquee = useRef<gsap.core.Tween | null>(null);
+  useIsoDraw(root);
   useGSAP(
     () => {
       const mm = gsap.matchMedia();
       mm.add("(prefers-reduced-motion: no-preference)", () => {
         const split = SplitText.create("[data-headline]", {
           type: "lines",
+          mask: "lines",
           autoSplit: true,
           onSplit: (self) =>
             gsap.from(self.lines, {
-              y: 36,
-              opacity: 0,
-              stagger: 0.12,
-              duration: 0.8,
-              ease: "power3.out",
+              yPercent: 100,
+              stagger: 0.1,
+              duration: 0.9,
+              ease: "power4.out",
             }),
         });
-        gsap.to("[data-gear]", {
-          rotation: 360,
-          duration: 80,
-          repeat: -1,
-          ease: "none",
-        });
         gsap.to("[data-chip]", {
-          y: -9,
-          duration: 2.5,
+          y: -6,
+          duration: 2.6,
           yoyo: true,
           repeat: -1,
-          stagger: 0.4,
+          stagger: 0.5,
           ease: "sine.inOut",
         });
         gsap.utils.toArray<HTMLElement>("[data-reveal]").forEach((el) =>
           gsap.from(el, {
-            y: 28,
+            y: 24,
             opacity: 0,
             duration: 0.7,
+            ease: "power3.out",
             scrollTrigger: { trigger: el, start: "top 93%", once: true },
           }),
         );
         gsap.from("[data-qualification]", {
-          scale: 0.85,
+          x: -16,
           opacity: 0,
-          stagger: 0.08,
-          ease: "back.out(1.5)",
+          stagger: 0.06,
+          duration: 0.5,
+          ease: "power3.out",
           scrollTrigger: {
             trigger: "#qualifications",
-            start: "top 85%",
+            start: "top 80%",
             once: true,
           },
         });
@@ -245,115 +307,112 @@ export function Home({ jobs }: { jobs: Job[] }) {
     <SiteShell>
       <div ref={root}>
         <main id="main">
-          <section className="relative grid min-h-[650px] overflow-hidden px-4 pb-10 pt-14 md:grid-cols-[1.05fr_0.95fr] md:gap-8 md:px-8 md:pt-16 xl:min-h-[750px] xl:px-16">
-            <div className="relative z-10 flex flex-col items-start">
-              <p className="mb-7 flex items-center gap-2 text-[10px] font-bold tracking-[0.18em] text-brand-grey md:text-xs">
-                <span className="size-2 rounded-full bg-brand-green" />
-                {t.eyebrow}
-              </p>
-              <h1
-                data-headline
-                className={`font-extrabold leading-[1.07] tracking-[-0.065em] ${language === "ta" ? "text-4xl lg:text-6xl" : "text-[clamp(3.6rem,6.7vw,7.6rem)]"}`}
-              >
-                {t.hero1}
-                <br />
-                {t.hero2}
-                <br />
-                <span className="text-brand-blue">{t.hero3}</span>
-                <span className="text-brand-orange">↗</span>
-              </h1>
-              <p className="mt-7 text-base leading-7 text-brand-grey md:w-5/6 xl:text-lg">
-                {t.intro}
-              </p>
-              <Button asChild className="mt-8 gap-8 px-7 py-4">
-                <Link href="/careers">
-                  {t.viewCareers}
-                  <ArrowUpRight size={20} />
-                </Link>
-              </Button>
-              <p className="mt-5 text-xs text-brand-grey">{t.heroNote}</p>
-              <a
-                href="#qualifications"
-                className="mt-12 flex min-h-11 items-center gap-3 text-[10px] font-semibold tracking-[0.15em]"
-              >
-                <span className="flex size-8 items-center justify-center rounded-full border border-ink/20">
-                  <ArrowDown size={14} />
-                </span>
-                {t.scroll}
-              </a>
-            </div>
-            <div className="relative mt-12 min-h-[390px] md:mt-0">
-              <div className="absolute inset-x-0 top-0 h-[88%] rounded-[32px] bg-[#e5edf1] md:top-5">
-                <div className="absolute left-7 top-7 flex items-center gap-2 text-[10px] font-bold tracking-[0.18em] text-ink/60">
-                  <span className="size-1.5 rounded-full bg-brand-orange" /> SVG
-                  / CAREERS
+          {/* Hero: Okean-style bento of blue, orange and paper tiles */}
+          <section className="pt-2 md:pt-4">
+            <Container className="grid grid-cols-2 gap-2 lg:grid-cols-12">
+              <div className="iso-on-blue relative isolate col-span-2 flex flex-col overflow-hidden rounded-xs bg-brand-blue blueprint-grid p-6 text-white sm:p-10 lg:col-span-8 lg:row-span-2 lg:min-h-[640px] xl:min-h-[700px] xl:p-14">
+                <div className="flex items-center justify-between gap-4">
+                  <Eyebrow tone="light">{t.eyebrow}</Eyebrow>
+                  <span className="hidden font-mono text-[11px] tracking-[0.14em] text-white/55 sm:block">
+                    SVG / CAREERS
+                  </span>
                 </div>
-                <div className="absolute inset-x-8 top-16 flex items-center justify-center">
-                  <svg
-                    data-gear
+                <h1
+                  data-headline
+                  className={cn(
+                    "mt-10 font-semibold tracking-[-0.045em] lg:mt-14",
+                    language === "ta"
+                      ? "text-4xl lg:text-6xl"
+                      : "text-[clamp(3.2rem,5.6vw,6.4rem)]",
+                    language === "ta" ? "leading-tight" : "leading-[0.95]",
+                  )}
+                >
+                  {t.hero1}
+                  <br />
+                  {t.hero2}
+                  <br />
+                  {t.hero3}
+                  <span
                     aria-hidden="true"
-                    viewBox="0 0 400 400"
-                    className="w-full overflow-visible text-brand-blue"
+                    className="ml-[0.35em] inline-flex size-[1.55em] -translate-y-[0.15em] items-center justify-center rounded-full bg-brand-orange align-middle text-[0.4em] font-medium text-white"
                   >
-                    <g fill="currentColor">
-                      {Array.from({ length: 12 }, (_, i) => (
-                        <rect
-                          key={i}
-                          x="172"
-                          y="12"
-                          width="56"
-                          height="96"
-                          rx="10"
-                          transform={`rotate(${i * 30} 200 200)`}
-                        />
-                      ))}
-                      <circle cx="200" cy="200" r="145" />
-                    </g>
-                    <circle cx="200" cy="200" r="86" fill="#e5edf1" />
-                    <circle cx="200" cy="200" r="58" fill="#f58220" />
-                    <path
-                      d="M175 219l47-47m-37 0h37v37"
-                      fill="none"
-                      stroke="#1e2a36"
-                      strokeWidth="10"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    />
-                  </svg>
+                    ↗
+                  </span>
+                </h1>
+                <p className="relative mt-7 max-w-sm text-base leading-7 text-white/80 xl:text-lg xl:leading-8">
+                  {t.intro}
+                </p>
+                <div className="relative mt-9 flex flex-col items-start gap-4">
+                  <Button asChild variant="light" className="min-w-56">
+                    <Link href="/careers">
+                      {t.viewCareers}
+                      <ArrowUpRight size={20} />
+                    </Link>
+                  </Button>
+                  <p className="max-w-xs text-xs leading-5 text-white/65">
+                    {t.heroNote}
+                  </p>
                 </div>
-                <div
-                  data-chip
-                  className="absolute -left-2 top-[38%] flex items-center gap-3 rounded-full border border-ink/10 bg-white px-5 py-3 text-xs font-semibold md:-left-6"
+                <div className="pointer-events-none relative -mx-4 mt-10 sm:-mx-6 lg:absolute lg:-bottom-6 lg:-right-4 lg:mx-0 lg:mt-0 lg:w-1/2">
+                  <IsoArt name="lathe" />
+                </div>
+                <a
+                  href="#qualifications"
+                  className="relative mt-8 flex min-h-11 items-center gap-3 self-start font-mono text-[11px] tracking-[0.14em] text-white/80 transition-colors hover:text-white lg:mt-auto"
                 >
-                  <Cog size={18} className="text-brand-blue" />
-                  {t.dept.Machining}
-                </div>
-                <div
-                  data-chip
-                  className="absolute -right-1 top-[61%] flex items-center gap-3 rounded-full border border-ink/10 bg-white px-5 py-3 text-xs font-semibold"
-                >
-                  <Wrench size={18} className="text-brand-orange" />
-                  {t.dept.Assembly}
-                </div>
+                  <span className="flex size-9 items-center justify-center rounded-full border border-white/40">
+                    <ArrowDown size={14} />
+                  </span>
+                  {t.scroll}
+                </a>
               </div>
-              <div className="absolute bottom-0 left-6 right-6 flex items-center justify-between gap-3 rounded-2xl bg-brand-orange p-6 xl:p-8">
+              <div className="col-span-2 flex min-h-72 flex-col justify-between gap-10 rounded-xs bg-brand-orange p-7 text-white lg:col-span-4 xl:p-9">
+                <div className="flex items-start justify-between">
+                  <span
+                    aria-hidden="true"
+                    className="mt-3 h-0.5 w-8 bg-white"
+                  />
+                  <ArrowUpRight
+                    size={36}
+                    strokeWidth={1.25}
+                    aria-hidden="true"
+                  />
+                </div>
                 <div>
-                  <p className="text-lg font-bold leading-tight xl:text-2xl">
+                  <p className="text-2xl font-semibold leading-tight tracking-tight xl:text-3xl">
                     {t.craft}
                     <br />
                     {t.people}
                   </p>
-                  <p className="mt-3 text-xs text-ink/80">{t.craftNote}</p>
+                  <p className="mt-3 text-sm text-ink/85">{t.craftNote}</p>
                 </div>
-                <ArrowUpRight
-                  size={38}
-                  strokeWidth={1.5}
-                  className="shrink-0"
-                />
               </div>
-            </div>
+              {(["Machining", "Assembly"] as const).map((dept, i) => (
+                <div
+                  key={dept}
+                  className="iso-on-paper iso-grid flex min-h-52 flex-col justify-between gap-6 rounded-xs bg-paper p-5 sm:p-6 lg:col-span-2 lg:min-h-64"
+                >
+                  <div
+                    data-chip
+                    className="mx-auto flex h-20 items-center sm:h-28"
+                  >
+                    <IsoArt
+                      name={departmentArt[dept]}
+                      className="h-full w-auto"
+                    />
+                  </div>
+                  <div className="flex items-end justify-between gap-2 border-t border-ink/10 pt-4">
+                    <p className="text-base font-semibold tracking-tight">
+                      {t.dept[dept]}
+                    </p>
+                    <Index value={i + 1} className="text-brand-orange" />
+                  </div>
+                </div>
+              ))}
+            </Container>
           </section>
-          <div className="relative mt-8 overflow-hidden border-y border-ink/10 bg-white py-5">
+
+          <div className="relative mt-2 overflow-hidden border-y border-ink/10 bg-white py-4">
             <div data-marquee className="flex w-max items-center">
               {[0, 1].map((copy) => (
                 <div
@@ -364,7 +423,7 @@ export function Home({ jobs }: { jobs: Job[] }) {
                   {jobs.map((job) => (
                     <span
                       key={job.slug}
-                      className="flex items-center gap-8 whitespace-nowrap px-4 text-xs font-semibold uppercase tracking-wider text-brand-grey"
+                      className="flex items-center gap-8 whitespace-nowrap px-4 font-mono text-xs uppercase tracking-wider text-brand-grey"
                     >
                       {t.jobTitles[job.title] || job.title}
                       <span className="text-brand-orange">✳</span>
@@ -380,197 +439,268 @@ export function Home({ jobs }: { jobs: Job[] }) {
                 marquee.current?.paused(next);
               }}
               aria-label={paused ? "Play role marquee" : "Pause role marquee"}
-              className="absolute right-0 top-0 h-full min-w-11 border-l bg-white px-4 text-xs"
+              className="absolute right-0 top-0 h-full min-w-12 border-l border-ink/10 bg-white px-4 font-mono text-xs transition-colors hover:text-brand-blue"
             >
               {paused ? "▶" : "Ⅱ"}
             </button>
           </div>
+
+          {/* Qualifications: blueprint panel + numbered spec table */}
           <section
             id="qualifications"
             aria-labelledby="qualifications-heading"
-            className="scroll-mt-6 px-4 py-16 md:px-8 xl:px-16 xl:py-24"
+            className="scroll-mt-24 py-20 xl:py-28"
           >
-            <div className="grid overflow-hidden rounded-[2rem] border border-ink/10 bg-white lg:grid-cols-[0.9fr_1.1fr]">
+            <Container className="grid gap-2 lg:grid-cols-12">
               <div
                 data-reveal
-                className="relative isolate flex flex-col items-start overflow-hidden bg-ink p-7 text-white sm:p-10 xl:p-12"
+                className="iso-on-blue relative isolate flex flex-col overflow-hidden rounded-xs bg-brand-blue blueprint-grid p-7 text-white sm:p-10 lg:col-span-5 xl:p-12"
               >
-                <div
-                  aria-hidden="true"
-                  className="pointer-events-none absolute -bottom-28 -left-28 -z-10 size-80 rounded-full border-[45px] border-white/5"
-                />
-                <span className="mb-10 flex size-14 items-center justify-center rounded-2xl border border-white/20 bg-white/5 text-brand-orange">
-                  <GraduationCap
-                    size={30}
-                    strokeWidth={1.5}
-                    aria-hidden="true"
-                  />
-                </span>
-                <p className="mb-5 text-[10px] font-bold tracking-[0.2em] text-brand-orange sm:text-xs">
-                  {t.available}
-                </p>
+                <Eyebrow tone="light">{t.available}</Eyebrow>
                 <h2
                   id="qualifications-heading"
-                  className="text-3xl font-bold leading-[1.15] tracking-tight sm:text-4xl xl:text-5xl"
+                  className="mt-8 text-4xl font-semibold leading-[1.05] tracking-[-0.03em] xl:text-5xl"
                 >
                   {t.allQualifications}
                   <br />
-                  <span className="text-brand-orange">{t.place}</span>
+                  <span className="underline decoration-brand-orange decoration-[3px] underline-offset-[10px]">
+                    {t.place}
+                  </span>
                 </h2>
-                <p className="mb-9 mt-6 max-w-sm text-sm leading-7 text-white/75">
+                <p className="mt-7 max-w-sm text-sm leading-7 text-white/75">
                   {t.qualificationNote}
                 </p>
-                <Link
-                  href="/careers"
-                  className="mt-auto inline-flex min-h-12 items-center gap-8 rounded-full bg-brand-orange px-6 py-3 text-sm font-bold text-ink transition-colors hover:bg-white"
-                >
-                  {t.seeOpenings}
-                  <ArrowUpRight size={18} aria-hidden="true" />
-                </Link>
+                <div className="mx-auto my-10 w-full max-w-72">
+                  <IsoArt name="steps" />
+                </div>
+                <Button asChild variant="orange" className="mt-auto self-start">
+                  <Link href="/careers">
+                    {t.seeOpenings}
+                    <ArrowUpRight size={18} aria-hidden="true" />
+                  </Link>
+                </Button>
               </div>
-              <div className="p-5 sm:p-8 xl:p-10">
-                <div className="mb-6 flex items-center justify-between gap-4 border-b border-ink/10 pb-5">
-                  <p className="text-sm font-bold">{t.qualifications}</p>
-                  <span className="text-[10px] font-semibold tracking-widest text-brand-grey">
+              <div className="flex flex-col rounded-xs border border-ink/10 bg-white lg:col-span-7">
+                <div className="grid grid-cols-[4rem_1fr_auto] items-center border-b border-ink/10">
+                  <span className="flex h-full items-center justify-center border-r border-ink/10 py-5 font-mono text-[11px] text-brand-grey">
+                    #
+                  </span>
+                  <p className="px-6 text-sm font-semibold">
+                    {t.qualifications}
+                  </p>
+                  <span className="px-6 font-mono text-[11px] tracking-[0.14em] text-brand-grey">
                     SVG / CAREERS
                   </span>
                 </div>
-                <div className="grid grid-cols-2 gap-3 sm:gap-4">
-                  {t.qualificationsList.map((q, i) => {
-                    const Icon =
-                      [
-                        BookOpen,
-                        BookOpen,
-                        Wrench,
-                        Award,
-                        GraduationCap,
-                        Layers3,
-                      ][i] || Layers3;
-                    return (
-                      <div
-                        data-qualification
-                        key={q}
-                        className={`group relative flex min-h-36 flex-col items-start justify-between rounded-2xl border p-5 motion-safe:transition-colors sm:min-h-40 ${i === 2 ? "border-brand-blue bg-brand-blue text-white" : "border-ink/5 bg-paper hover:border-brand-blue/30 hover:bg-blue-50"}`}
+                {t.qualificationsList.map((q, i) => {
+                  const Icon = qualificationIcons[i] ?? Layers3;
+                  const highlighted = i === 2;
+                  return (
+                    <div
+                      data-qualification
+                      key={q}
+                      className={cn(
+                        "grid flex-1 grid-cols-[4rem_1fr_auto] items-stretch border-b transition-colors duration-200 last:border-b-0",
+                        highlighted
+                          ? "border-brand-blue bg-brand-blue text-white"
+                          : "border-ink/10 hover:bg-paper",
+                      )}
+                    >
+                      <span
+                        className={cn(
+                          "flex items-center justify-center border-r",
+                          highlighted ? "border-white/20" : "border-ink/10",
+                        )}
                       >
-                        <div className="flex w-full items-center justify-between gap-3">
-                          <Icon
-                            size={25}
-                            strokeWidth={1.5}
-                            aria-hidden="true"
-                            className={
-                              i === 2 ? "text-white" : "text-brand-blue"
-                            }
-                          />
-                          <span
-                            aria-hidden="true"
-                            className={`text-[10px] font-semibold ${i === 2 ? "text-white/65" : "text-ink/40"}`}
-                          >
-                            0{i + 1}
-                          </span>
-                        </div>
-                        <h3 className="mt-6 text-lg font-bold leading-snug tracking-tight sm:text-xl">
-                          {q}
-                        </h3>
-                      </div>
-                    );
-                  })}
-                </div>
+                        <Index
+                          value={i + 1}
+                          className={
+                            highlighted ? "text-white/70" : "text-brand-orange"
+                          }
+                        />
+                      </span>
+                      <h3 className="flex min-h-18 items-center px-6 text-xl font-semibold tracking-tight sm:text-2xl">
+                        {q}
+                      </h3>
+                      <span className="flex items-center px-6">
+                        <Icon
+                          size={22}
+                          strokeWidth={1.25}
+                          aria-hidden="true"
+                          className={
+                            highlighted ? "text-white" : "text-brand-blue"
+                          }
+                        />
+                      </span>
+                    </div>
+                  );
+                })}
               </div>
-            </div>
+            </Container>
           </section>
+
+          {/* Open roles */}
           <section
             id="roles"
-            className="scroll-mt-6 border-t border-ink/10 px-4 py-20 md:px-8 xl:px-16"
+            className="scroll-mt-24 border-t border-ink/10 bg-paper py-20 xl:py-28"
           >
-            <div
-              data-reveal
-              className="mb-10 flex flex-wrap items-end justify-between gap-6"
-            >
-              <div>
-                <p className="mb-4 text-xs font-bold tracking-[0.2em] text-brand-blue">
-                  {t.roles}
-                </p>
-                <h2 className="text-3xl font-bold tracking-tight xl:text-5xl">
-                  {t.openings}
-                </h2>
-                <p className="mt-5 text-sm text-brand-grey">{t.openingsNote}</p>
-              </div>
-              <Button asChild variant="outline">
-                <Link href="/careers">
-                  {t.allRoles}
-                  <ArrowUpRight size={18} />
-                </Link>
-              </Button>
-            </div>
-            <div className="flex snap-x snap-mandatory gap-4 overflow-x-auto pb-4 md:grid md:grid-cols-2 md:overflow-visible xl:grid-cols-4">
-              {jobs.map((job, i) => (
-                <div
-                  data-reveal
-                  key={job.slug}
-                  className="w-[85%] shrink-0 snap-start md:w-auto"
-                >
-                  <JobCard job={job} index={i} />
+            <Container>
+              <div
+                data-reveal
+                className="mb-10 grid gap-6 lg:grid-cols-12 lg:items-end"
+              >
+                <div className="lg:col-span-8">
+                  <Eyebrow>{t.roles}</Eyebrow>
+                  <h2 className="mt-6 text-4xl font-semibold leading-[1.05] tracking-[-0.03em] xl:text-6xl">
+                    {t.openings}
+                  </h2>
                 </div>
-              ))}
-            </div>
+                <p className="text-sm leading-6 text-brand-grey lg:col-span-4 lg:text-right">
+                  {t.openingsNote}
+                </p>
+              </div>
+              <div className="-mx-4 flex snap-x snap-mandatory scroll-px-4 gap-2 overflow-x-auto px-4 pb-4 md:mx-0 md:grid md:grid-cols-2 md:overflow-visible md:px-0 md:pb-0 xl:grid-cols-4">
+                {jobs.map((job, i) => (
+                  <div
+                    data-reveal
+                    key={job.slug}
+                    className="w-[82%] shrink-0 snap-start md:w-auto"
+                  >
+                    <JobCard job={job} index={i} />
+                  </div>
+                ))}
+                <Link
+                  data-reveal
+                  href="/careers"
+                  className={cn(
+                    "iso-on-blue group relative flex w-[82%] shrink-0 snap-start flex-col justify-between gap-8 overflow-hidden rounded-xs bg-brand-blue blueprint-grid p-7 text-white transition-colors hover:bg-brand-blue-deep md:w-auto",
+                    jobs.length % 2 === 1 ? "md:col-span-1" : "md:col-span-2",
+                    jobs.length % 4 === 2 && "xl:col-span-2",
+                    jobs.length % 4 === 1 && "xl:col-span-3",
+                    jobs.length % 4 === 3 && "xl:col-span-1",
+                    jobs.length % 4 === 0 && "xl:col-span-4",
+                  )}
+                >
+                  <div className="flex items-start justify-between gap-4">
+                    <span
+                      aria-hidden="true"
+                      className="mt-3 h-0.5 w-8 bg-white"
+                    />
+                    <span className="flex size-11 items-center justify-center rounded-xs bg-brand-orange text-ink transition-transform duration-300 ease-out group-hover:-translate-y-0.5 group-hover:translate-x-0.5">
+                      <ArrowUpRight size={22} />
+                    </span>
+                  </div>
+                  <div className="mx-auto w-full max-w-64">
+                    <IsoArt name="join" />
+                  </div>
+                  <p className="text-2xl font-semibold tracking-tight">
+                    {t.allRoles}
+                  </p>
+                </Link>
+              </div>
+            </Container>
           </section>
+
+          {/* Journey */}
           <section
             id="how"
-            className="relative overflow-hidden bg-ink px-4 py-20 text-white md:px-8 xl:px-16 xl:py-28"
+            className="iso-on-blue relative overflow-hidden bg-brand-blue blueprint-grid py-20 text-white xl:py-28"
           >
-            <p className="mb-5 text-xs font-bold tracking-[0.2em] text-brand-orange">
-              {t.howLabel}
-            </p>
-            <h2 className="text-4xl font-bold tracking-tight xl:text-5xl">
-              {t.how}
-            </h2>
-            <svg
-              className="pointer-events-none absolute left-[10%] top-[49%] hidden w-4/5 md:block"
-              viewBox="0 0 1000 80"
-              aria-hidden="true"
-            >
-              <path
-                data-connector
-                d="M0 40 H1000"
-                fill="none"
-                stroke="#f58220"
-                strokeWidth="2"
-                strokeDasharray="4 8"
-              />
-            </svg>
-            <div className="relative mt-16 grid gap-10 md:grid-cols-3 md:gap-16">
-              {t.steps.map((s, i) => (
-                <div data-reveal key={s}>
-                  <span
-                    className={`mb-7 flex size-14 items-center justify-center rounded-full text-lg font-bold ${i === 1 ? "bg-brand-orange text-ink" : "border border-white/30 bg-ink"}`}
+            <Container>
+              <Eyebrow tone="light">{t.howLabel}</Eyebrow>
+              <h2 className="mt-6 text-4xl font-semibold tracking-[-0.03em] xl:text-6xl">
+                {t.how}
+              </h2>
+              <div className="relative mt-14 grid border border-white/25 md:grid-cols-3">
+                <svg
+                  className="pointer-events-none absolute inset-x-0 top-9 hidden h-px w-full md:block"
+                  viewBox="0 0 1000 2"
+                  preserveAspectRatio="none"
+                  aria-hidden="true"
+                >
+                  <path
+                    data-connector
+                    d="M0 1 H1000"
+                    fill="none"
+                    stroke="#ee5a2f"
+                    strokeWidth="2"
+                    strokeDasharray="4 8"
+                  />
+                </svg>
+                {t.steps.map((s, i) => (
+                  <div
+                    data-reveal
+                    key={s}
+                    className="flex flex-col border-white/25 not-last:border-b md:not-last:border-b-0 md:not-last:border-r"
                   >
-                    0{i + 1}
-                  </span>
-                  <h3 className="text-xl font-semibold">{s}</h3>
-                  <p className="mt-4 text-sm leading-7 text-white/60">
-                    {t.stepNotes[i]}
-                  </p>
-                </div>
-              ))}
-            </div>
+                    <div className="relative flex items-center px-6 py-4">
+                      <span
+                        className={cn(
+                          "flex size-10 items-center justify-center rounded-xs font-mono text-sm font-semibold",
+                          i === 1
+                            ? "bg-brand-orange text-ink"
+                            : "border border-white/40 bg-brand-blue",
+                        )}
+                      >
+                        0{i + 1}
+                      </span>
+                    </div>
+                    <div className="flex h-52 items-center justify-center border-y border-white/25 px-10 py-8">
+                      <IsoArt
+                        name={journeyArt[i]}
+                        className="h-full w-auto max-w-full"
+                      />
+                    </div>
+                    <div className="p-6 xl:p-8">
+                      <h3 className="text-xl font-semibold tracking-tight">
+                        {s}
+                      </h3>
+                      <p className="mt-3 text-sm leading-7 text-white/70">
+                        {t.stepNotes[i]}
+                      </p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </Container>
           </section>
+
           <Testimonials />
           <Faq />
-          <section className="flex flex-col items-start justify-between gap-8 bg-brand-blue px-4 py-16 text-white md:flex-row md:items-center md:px-8 xl:px-16 xl:py-20">
-            <div>
-              <h2 className="text-4xl font-bold leading-tight tracking-tight xl:text-6xl">
-                {t.ready}
-                <br />
-                {t.starts}
-              </h2>
-              <p className="mt-5 text-sm text-white/80">{t.readyNote}</p>
-            </div>
-            <Button asChild variant="orange" className="gap-10 px-8 py-5">
-              <Link href="/careers">
-                {t.apply}
-                <ArrowUpRight size={23} />
-              </Link>
-            </Button>
+
+          {/* Closing call to action: Okean "contact" tile */}
+          <section className="bg-paper pb-16 xl:pb-24">
+            <Container>
+              <div className="iso-on-blue relative isolate grid items-center gap-10 overflow-hidden rounded-xs bg-brand-blue blueprint-grid p-8 text-white md:grid-cols-12 md:p-12 xl:p-16">
+                <div
+                  aria-hidden="true"
+                  className="absolute -bottom-40 -right-40 -z-10 size-96 rounded-full bg-brand-orange"
+                />
+                <div className="md:col-span-7">
+                  <h2 className="text-4xl font-semibold leading-[1.02] tracking-[-0.035em] xl:text-7xl">
+                    {t.ready}
+                    <br />
+                    {t.starts}
+                  </h2>
+                  <p className="mt-6 max-w-md text-sm leading-6 text-white/80">
+                    {t.readyNote}
+                  </p>
+                  <Button
+                    asChild
+                    variant="orange"
+                    className="mt-9 min-w-56 py-4"
+                  >
+                    <Link href="/careers">
+                      {t.apply}
+                      <ArrowUpRight size={22} />
+                    </Link>
+                  </Button>
+                </div>
+                <div className="mx-auto w-full max-w-xs md:col-span-5 md:max-w-sm">
+                  <IsoArt name="arrow" />
+                </div>
+              </div>
+            </Container>
           </section>
         </main>
       </div>

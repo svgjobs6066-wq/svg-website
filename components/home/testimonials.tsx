@@ -3,6 +3,9 @@
 import { ArrowUpRight, Quote } from "lucide-react";
 import Link from "next/link";
 import { useLanguage } from "@/components/layout/provider";
+import { Button } from "@/components/ui/button";
+import { Container, Eyebrow } from "@/components/ui/swiss";
+import { cn } from "@/lib/utils";
 
 export function Testimonials() {
   const { language } = useLanguage();
@@ -59,94 +62,121 @@ export function Testimonials() {
     <section
       id="testimonials"
       aria-labelledby="testimonials-heading"
-      className="relative isolate overflow-hidden border-b border-ink/10 bg-[#eef3f6] px-4 py-20 md:px-8 xl:px-16 xl:py-28"
+      className="border-b border-ink/10 bg-white py-20 xl:py-28"
     >
-      <div
-        aria-hidden="true"
-        className="pointer-events-none absolute -right-32 -top-40 -z-10 size-[480px] rounded-full border-[70px] border-white/60"
-      />
-      <div
-        data-reveal
-        className="mb-12 flex flex-wrap items-end justify-between gap-7"
-      >
-        <div className="max-w-2xl">
-          <p className="mb-5 flex items-center gap-3 text-xs font-bold tracking-[0.2em] text-brand-blue">
-            <span className="h-px w-8 bg-brand-orange" />
-            {tamil ? "அனுபவப் பகிர்வுகள்" : "PEOPLE & POSSIBILITIES"}
-          </p>
-          <h2
-            id="testimonials-heading"
-            className="text-3xl font-bold leading-tight tracking-tight md:text-5xl"
-          >
-            {tamil ? "ஒவ்வொரு பயணத்திற்கும்" : "Behind every skill,"}
-            <br />
-            <span className="text-brand-blue">
-              {tamil ? "ஒரு கதை உண்டு." : "there’s a story."}
-            </span>
-          </h2>
-          <p className="mt-5 max-w-lg text-sm leading-7 text-brand-grey">
-            {tamil
-              ? "இவை மாதிரி வாசகங்கள். உண்மையான அனுபவப் பகிர்வுகள் அனுமதியுடன் விரைவில் சேர்க்கப்படும்."
-              : "A preview of our testimonials. These illustrative quotes will be replaced with real stories shared with permission."}
-          </p>
-        </div>
-        <Link
-          href="/careers"
-          className="inline-flex min-h-11 items-center gap-5 rounded-full border border-ink/20 bg-white px-6 py-3 text-sm font-bold transition-colors hover:border-brand-blue hover:text-brand-blue"
+      <Container>
+        <div
+          data-reveal
+          className="mb-12 grid gap-7 lg:grid-cols-12 lg:items-end"
         >
-          {tamil ? "உங்கள் பயணத்தைத் தொடங்குங்கள்" : "Start your story"}
-          <ArrowUpRight size={18} aria-hidden="true" />
-        </Link>
-      </div>
-      <div className="grid gap-5 lg:grid-cols-3">
-        {stories.map((story, index) => (
-          <figure
-            data-reveal
-            key={story.initials}
-            className={`relative flex flex-col rounded-3xl border p-7 shadow-sm motion-safe:transition-[translate,box-shadow] motion-safe:duration-300 motion-safe:hover:-translate-y-1 hover:shadow-xl md:p-9 ${index === 1 ? "border-brand-blue bg-brand-blue text-white lg:-translate-y-3" : "border-white bg-white text-ink"}`}
-          >
-            <div className="mb-8 flex items-center justify-between gap-4">
-              <Quote
-                size={38}
-                strokeWidth={1.3}
-                aria-hidden="true"
-                className={index === 1 ? "text-white/75" : "text-brand-blue"}
-              />
-              <span
-                className={`rounded-full px-3 py-1.5 text-[10px] font-bold tracking-wider ${index === 1 ? "bg-white/15 text-white" : "bg-paper text-brand-grey"}`}
-              >
-                {tamil ? "மாதிரி வாசகம்" : "SAMPLE TESTIMONIAL"}
-              </span>
-            </div>
-            <p
-              className={`mb-4 text-xs font-semibold ${index === 1 ? "text-white/80" : "text-brand-blue"}`}
+          <div className="lg:col-span-8">
+            <Eyebrow>
+              {tamil ? "அனுபவப் பகிர்வுகள்" : "PEOPLE & POSSIBILITIES"}
+            </Eyebrow>
+            <h2
+              id="testimonials-heading"
+              className="mt-6 text-4xl font-semibold leading-[1.05] tracking-[-0.03em] md:text-5xl"
             >
-              {story.topic}
+              {tamil ? "ஒவ்வொரு பயணத்திற்கும்" : "Behind every skill,"}
+              <br />
+              <span className="text-brand-blue">
+                {tamil ? "ஒரு கதை உண்டு." : "there’s a story."}
+              </span>
+            </h2>
+            <p className="mt-6 max-w-lg text-sm leading-7 text-brand-grey">
+              {tamil
+                ? "இவை மாதிரி வாசகங்கள். உண்மையான அனுபவப் பகிர்வுகள் அனுமதியுடன் விரைவில் சேர்க்கப்படும்."
+                : "A preview of our testimonials. These illustrative quotes will be replaced with real stories shared with permission."}
             </p>
-            <blockquote className="mb-10 text-xl font-medium leading-relaxed tracking-tight">
-              “{story.quote}”
-            </blockquote>
-            <figcaption
-              className={`mt-auto flex items-center gap-4 border-t pt-6 ${index === 1 ? "border-white/25" : "border-ink/10"}`}
-            >
-              <span
-                aria-hidden="true"
-                className={`flex size-12 shrink-0 items-center justify-center rounded-full text-sm font-bold ${index === 1 ? "bg-brand-orange text-ink" : "bg-blue-50 text-brand-blue"}`}
+          </div>
+          <div className="lg:col-span-4 lg:justify-self-end">
+            <Button asChild variant="outline">
+              <Link href="/careers">
+                {tamil ? "உங்கள் பயணத்தைத் தொடங்குங்கள்" : "Start your story"}
+                <ArrowUpRight size={18} aria-hidden="true" />
+              </Link>
+            </Button>
+          </div>
+        </div>
+        <div className="grid gap-2 lg:grid-cols-3">
+          {stories.map((story, index) => {
+            const featured = index === 1;
+            return (
+              <figure
+                data-reveal
+                key={story.initials}
+                className={cn(
+                  "relative flex flex-col rounded-xs border p-7 transition-[border-color] duration-200 md:p-9",
+                  featured
+                    ? "border-brand-blue bg-brand-blue blueprint-grid text-white"
+                    : "border-ink/10 bg-paper text-ink hover:border-brand-blue/40",
+                )}
               >
-                {story.initials}
-              </span>
-              <div>
-                <p className="text-sm font-bold">{story.role}</p>
+                <div className="mb-10 flex items-center justify-between gap-4">
+                  <Quote
+                    size={34}
+                    strokeWidth={1.25}
+                    aria-hidden="true"
+                    className={
+                      featured ? "text-brand-orange" : "text-brand-blue"
+                    }
+                  />
+                  <span
+                    className={cn(
+                      "rounded-xs px-2.5 py-1.5 font-mono text-[10px] tracking-wider",
+                      featured
+                        ? "bg-white/10 text-white"
+                        : "bg-white text-brand-grey",
+                    )}
+                  >
+                    {tamil ? "மாதிரி வாசகம்" : "SAMPLE TESTIMONIAL"}
+                  </span>
+                </div>
                 <p
-                  className={`mt-1 text-xs ${index === 1 ? "text-white/80" : "text-brand-grey"}`}
+                  className={cn(
+                    "mb-4 font-mono text-[11px] uppercase tracking-wider",
+                    featured ? "text-white/75" : "text-brand-blue",
+                  )}
                 >
-                  {tamil ? "விளக்கத்திற்கான மாதிரி" : "Illustrative story"}
+                  {story.topic}
                 </p>
-              </div>
-            </figcaption>
-          </figure>
-        ))}
-      </div>
+                <blockquote className="mb-10 text-xl font-medium leading-relaxed tracking-tight">
+                  “{story.quote}”
+                </blockquote>
+                <figcaption
+                  className={cn(
+                    "mt-auto flex items-center gap-4 border-t pt-6",
+                    featured ? "border-white/25" : "border-ink/10",
+                  )}
+                >
+                  <span
+                    aria-hidden="true"
+                    className={cn(
+                      "flex size-11 shrink-0 items-center justify-center rounded-xs font-mono text-sm font-semibold",
+                      featured
+                        ? "bg-brand-orange text-ink"
+                        : "bg-white text-brand-blue",
+                    )}
+                  >
+                    {story.initials}
+                  </span>
+                  <div>
+                    <p className="text-sm font-semibold">{story.role}</p>
+                    <p
+                      className={cn(
+                        "mt-1 text-xs",
+                        featured ? "text-white/75" : "text-brand-grey",
+                      )}
+                    >
+                      {tamil ? "விளக்கத்திற்கான மாதிரி" : "Illustrative story"}
+                    </p>
+                  </div>
+                </figcaption>
+              </figure>
+            );
+          })}
+        </div>
+      </Container>
     </section>
   );
 }
