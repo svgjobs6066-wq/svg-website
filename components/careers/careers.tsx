@@ -7,6 +7,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { ArrowDown, ArrowUpRight, FileUp, LockKeyhole } from "lucide-react";
 import { gsap } from "gsap";
 import { Flip } from "gsap/Flip";
+import { DrawSVGPlugin } from "gsap/DrawSVGPlugin";
 import { useGSAP } from "@gsap/react";
 import { useLanguage } from "@/components/layout/provider";
 import { SiteShell } from "@/components/layout/site-shell";
@@ -22,7 +23,12 @@ import {
   validateResume,
 } from "@/lib/validation";
 import { browserClient } from "@/lib/supabase/client";
-gsap.registerPlugin(Flip, useGSAP);
+import { Container, Eyebrow } from "@/components/ui/swiss";
+import { IsoArt } from "@/components/iso/iso-art";
+import { useIsoDraw } from "@/components/iso/use-iso-draw";
+import { cn } from "@/lib/utils";
+gsap.registerPlugin(Flip, DrawSVGPlugin, useGSAP);
+const labelClass = "mb-2 block text-sm font-semibold";
 export function Careers({
   jobs,
   initialJob,
@@ -72,6 +78,7 @@ export function Careers({
   useEffect(() => {
     if (reference) successRef.current?.focus();
   }, [reference]);
+  useIsoDraw(root);
   const { contextSafe } = useGSAP({ scope: root });
   useGSAP(
     () => {
@@ -179,8 +186,8 @@ export function Careers({
     placeholder?: string,
   ) => (
     <div>
-      <label className="mb-2 block text-sm font-semibold" htmlFor={name}>
-        {label} <span className="text-brand-blue">*</span>
+      <label className={labelClass} htmlFor={name}>
+        {label} <span className="text-brand-orange">*</span>
       </label>
       <Input
         id={name}
@@ -209,307 +216,349 @@ export function Careers({
   return (
     <SiteShell>
       <main id="main" ref={root}>
-        <section className="border-b border-ink/10 px-4 py-16 md:px-8 xl:px-16 xl:py-24">
-          <p className="mb-6 text-xs font-bold tracking-[0.2em] text-brand-blue">
-            SVG / {t.careers}
-          </p>
-          <div className="flex flex-wrap items-end justify-between gap-8">
-            <div>
-              <h1 className="text-4xl font-extrabold tracking-tight md:text-6xl">
-                {t.careerTitle}
-              </h1>
-              <p className="mt-6 text-brand-grey">{t.careerIntro}</p>
+        <section className="pt-2 md:pt-4">
+          <Container className="grid gap-2 lg:grid-cols-12">
+            <div className="iso-grid flex flex-col justify-between gap-10 rounded-xs bg-paper p-7 sm:p-10 lg:col-span-7 xl:p-14">
+              <Eyebrow>SVG / {t.careers}</Eyebrow>
+              <div>
+                <h1 className="text-5xl font-semibold leading-[1] tracking-[-0.045em] md:text-7xl">
+                  {t.careerTitle}
+                </h1>
+                <p className="mt-6 max-w-md text-base leading-7 text-brand-grey">
+                  {t.careerIntro}
+                </p>
+                <Button asChild className="mt-9 min-w-48">
+                  <a href="#application">
+                    {t.apply}
+                    <ArrowDown size={18} />
+                  </a>
+                </Button>
+              </div>
             </div>
-            <Button asChild>
-              <a href="#application">
-                {t.apply}
-                <ArrowDown size={18} />
-              </a>
-            </Button>
-          </div>
+            <div className="iso-on-blue relative flex min-h-80 items-center justify-center overflow-hidden rounded-xs bg-brand-blue blueprint-grid p-8 lg:col-span-5">
+              <span className="absolute left-7 top-7 font-mono text-[11px] tracking-[0.14em] text-white/55">
+                SVG / CAREERS
+              </span>
+              <div className="w-full max-w-md pt-6">
+                <IsoArt name="plant" />
+              </div>
+            </div>
+          </Container>
         </section>
-        <section className="px-4 py-12 md:px-8 xl:px-16">
-          <div aria-label={t.roles} className="mb-8 flex flex-wrap gap-2">
-            {["All", ...departments].map((d) => (
-              <button
-                key={d}
-                onClick={() => filter(d)}
-                aria-pressed={department === d}
-                className={`min-h-11 rounded-full border px-5 py-3 text-xs font-semibold transition-colors ${department === d ? "border-brand-blue bg-brand-blue text-white" : "border-ink/15 bg-white hover:border-brand-blue"}`}
-              >
-                {d === "All" ? t.allRoles : t.dept[d]}
-              </button>
-            ))}
-          </div>
-          <div ref={list} className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-            {jobs
-              .filter(
-                (job) => department === "All" || job.department === department,
-              )
-              .map((job, i) => (
-                <div key={job.slug} data-filter-card data-flip-id={job.slug}>
-                  <JobCard
-                    job={job}
-                    index={i}
-                    selected={values.job === job.slug}
-                    onSelect={() => selectJob(job.slug)}
-                  />
-                </div>
+        <section className="py-12 md:py-16">
+          <Container>
+            <div
+              aria-label={t.roles}
+              className="mb-8 flex flex-wrap gap-px overflow-hidden rounded-xs border border-ink/10 bg-ink/10 sm:inline-flex"
+            >
+              {["All", ...departments].map((d) => (
+                <button
+                  key={d}
+                  onClick={() => filter(d)}
+                  aria-pressed={department === d}
+                  className={cn(
+                    "min-h-11 grow px-5 py-3 font-mono text-xs transition-colors duration-200 focus-visible:z-10 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-brand-orange sm:grow-0",
+                    department === d
+                      ? "bg-brand-blue text-white"
+                      : "bg-white hover:bg-paper hover:text-brand-blue",
+                  )}
+                >
+                  {d === "All" ? t.allRoles : t.dept[d]}
+                </button>
               ))}
-          </div>
-          {!jobs.some(
-            (j) => department === "All" || j.department === department,
-          ) && <p className="py-10 text-brand-grey">{t.noJobs}</p>}
+            </div>
+            <div
+              ref={list}
+              className="grid gap-2 md:grid-cols-2 xl:grid-cols-4"
+            >
+              {jobs
+                .filter(
+                  (job) =>
+                    department === "All" || job.department === department,
+                )
+                .map((job, i) => (
+                  <div key={job.slug} data-filter-card data-flip-id={job.slug}>
+                    <JobCard
+                      job={job}
+                      index={i}
+                      selected={values.job === job.slug}
+                      onSelect={() => selectJob(job.slug)}
+                    />
+                  </div>
+                ))}
+            </div>
+            {!jobs.some(
+              (j) => department === "All" || j.department === department,
+            ) && <p className="py-10 text-brand-grey">{t.noJobs}</p>}
+          </Container>
         </section>
         <section
           id="application"
-          className="grid scroll-mt-8 gap-10 bg-[#e8eff3] px-4 py-16 md:grid-cols-[0.8fr_1.2fr] md:px-8 xl:gap-20 xl:px-16 xl:py-24"
+          className="scroll-mt-24 border-y border-ink/10 bg-paper py-16 xl:py-24"
         >
-          <div>
-            <span className="mb-7 flex size-14 items-center justify-center rounded-2xl bg-brand-blue text-white">
-              <ArrowUpRight size={28} />
-            </span>
-            <h2 className="text-3xl font-bold tracking-tight xl:text-5xl">
-              {t.formTitle}
-            </h2>
-            <p className="mt-5 text-sm leading-7 text-brand-grey">
-              {t.formNote}
-            </p>
-            <div className="mt-9 flex items-start gap-3 border-t border-ink/15 pt-6 text-xs leading-6 text-brand-grey">
-              <LockKeyhole className="shrink-0 text-brand-blue" size={18} />
-              <p>
-                {t.reviewNote}
-                <br />
-                <Link href="/privacy" className="underline underline-offset-4">
-                  {t.privacy}
-                </Link>
-              </p>
-            </div>
-          </div>
-          {reference ? (
-            <div
-              ref={successRef}
-              tabIndex={-1}
-              role="status"
-              className="rounded-3xl bg-white p-8 md:p-12"
-            >
-              <span className="flex size-16 items-center justify-center rounded-full bg-green-100 text-green-800">
-                <svg
-                  width="30"
-                  height="30"
-                  viewBox="0 0 24 24"
-                  aria-hidden="true"
-                >
-                  <path
-                    data-success-check
-                    d="M4 12l5 5L20 6"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                </svg>
+          <Container className="grid gap-10 lg:grid-cols-12 xl:gap-16">
+            <div className="lg:col-span-4">
+              <span className="mb-8 flex size-12 items-center justify-center rounded-xs bg-brand-orange text-ink">
+                <ArrowUpRight size={24} />
               </span>
-              <h2 className="mt-6 text-3xl font-bold">{t.success}</h2>
-              <p className="mt-4 leading-7 text-brand-grey">{t.successNote}</p>
-              <div className="my-8 rounded-xl bg-paper p-5">
-                <p className="text-xs tracking-widest text-brand-grey">
-                  {t.reference}
-                </p>
-                <p className="mt-2 text-2xl font-bold text-brand-blue">
-                  <span aria-label={reference}>
-                    {reference.split("").map((character, i) => (
-                      <span key={i} data-reference-character aria-hidden="true">
-                        {character}
-                      </span>
-                    ))}
-                  </span>
+              <h2 className="text-4xl font-semibold leading-[1.05] tracking-[-0.03em] xl:text-5xl">
+                {t.formTitle}
+              </h2>
+              <p className="mt-5 text-sm leading-7 text-brand-grey">
+                {t.formNote}
+              </p>
+              <div className="iso-on-paper mx-auto mt-10 hidden w-full max-w-60 lg:block">
+                <IsoArt name="apply" />
+              </div>
+              <div className="mt-10 flex items-start gap-3 border-t border-ink/15 pt-6 text-xs leading-6 text-brand-grey">
+                <LockKeyhole className="shrink-0 text-brand-blue" size={18} />
+                <p>
+                  {t.reviewNote}
+                  <br />
+                  <Link
+                    href="/privacy"
+                    className="font-medium text-ink underline decoration-brand-orange decoration-2 underline-offset-4"
+                  >
+                    {t.privacy}
+                  </Link>
                 </p>
               </div>
-              <Button asChild variant="outline">
-                <a href="#main">{t.another}</a>
-              </Button>
             </div>
-          ) : (
-            <form
-              onSubmit={handleSubmit(submit, () => setMessage(t.required))}
-              noValidate
-              className="rounded-3xl border border-ink/10 bg-white p-6 md:p-9"
-            >
-              <div className="mb-8">
-                <div className="mb-3 flex justify-between text-xs text-brand-grey">
-                  <span>{t.progress}</span>
-                  <span>{Math.round(progress * 100)}%</span>
-                </div>
-                <div
-                  role="progressbar"
-                  aria-label={t.progress}
-                  aria-valuenow={Math.round(progress * 100)}
-                  aria-valuemin={0}
-                  aria-valuemax={100}
-                  className="h-1 overflow-hidden rounded-full bg-paper"
-                >
-                  <div
-                    className="h-full origin-left bg-brand-blue transition-transform motion-reduce:transition-none"
-                    style={{ transform: `scaleX(${progress})` }}
-                  />
-                </div>
-              </div>
-              <fieldset
-                disabled={isSubmitting}
-                className="grid gap-6 md:grid-cols-2"
+            {reference ? (
+              <div
+                ref={successRef}
+                tabIndex={-1}
+                role="status"
+                className="rounded-xs border border-ink/10 bg-white p-8 outline-none md:p-12 lg:col-span-8"
               >
-                {field("full_name", t.fullName)}
-                {field("phone", t.phone, "9876543210")}
-                <div>
-                  <label
-                    htmlFor="job"
-                    className="mb-2 block text-sm font-semibold"
+                <span className="flex size-14 items-center justify-center rounded-xs bg-brand-blue text-white">
+                  <svg
+                    width="28"
+                    height="28"
+                    viewBox="0 0 24 24"
+                    aria-hidden="true"
                   >
-                    {t.job} *
-                  </label>
-                  <Select
-                    id="job"
-                    {...register("job")}
-                    aria-invalid={!!errors.job}
-                  >
-                    <option value="any">{t.anyRole}</option>
-                    {jobs.map((job) => (
-                      <option key={job.slug} value={job.slug}>
-                        {t.jobTitles[job.title] || job.title}
-                      </option>
-                    ))}
-                  </Select>
-                </div>
-                {field("preferred_location", t.location, t.locationHint)}
-                <div>
-                  <label
-                    htmlFor="qualification"
-                    className="mb-2 block text-sm font-semibold"
-                  >
-                    {t.qualification} *
-                  </label>
-                  <Select
-                    id="qualification"
-                    {...register("qualification")}
-                    aria-invalid={!!errors.qualification}
-                  >
-                    <option value="">{t.choose}</option>
-                    {qualifications.map((q, i) => (
-                      <option key={q} value={q}>
-                        {t.qualificationsList[i]}
-                      </option>
-                    ))}
-                  </Select>
-                  {errors.qualification && (
-                    <p className="mt-2 text-xs text-red-700">{t.required}</p>
-                  )}
-                </div>
-                <div>
-                  <label
-                    htmlFor="experience"
-                    className="mb-2 block text-sm font-semibold"
-                  >
-                    {t.experience}{" "}
-                    <span className="font-normal text-brand-grey">
-                      ({t.optional})
+                    <path
+                      data-success-check
+                      d="M4 12l5 5L20 6"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                  </svg>
+                </span>
+                <h2 className="mt-7 text-3xl font-semibold tracking-tight md:text-4xl">
+                  {t.success}
+                </h2>
+                <p className="mt-4 max-w-lg leading-7 text-brand-grey">
+                  {t.successNote}
+                </p>
+                <div className="my-8 grid grid-cols-[auto_1fr] items-stretch rounded-xs border border-ink/10">
+                  <span className="flex items-center border-r border-ink/10 bg-paper px-5 font-mono text-[11px] tracking-widest text-brand-grey">
+                    {t.reference}
+                  </span>
+                  <p className="p-5 font-mono text-2xl font-semibold tracking-wider text-brand-blue">
+                    <span aria-label={reference}>
+                      {reference.split("").map((character, i) => (
+                        <span
+                          key={i}
+                          data-reference-character
+                          aria-hidden="true"
+                        >
+                          {character}
+                        </span>
+                      ))}
                     </span>
-                  </label>
-                  <Select id="experience" {...register("experience")}>
-                    <option value="">{t.choose}</option>
-                    {experiences.map((e, i) => (
-                      <option key={e} value={e}>
-                        {t.expOptions[i]}
-                      </option>
-                    ))}
-                  </Select>
-                </div>
-                <div className="md:col-span-2">
-                  <label
-                    htmlFor="resume"
-                    className="mb-2 block text-sm font-semibold"
-                  >
-                    {t.resume}{" "}
-                    <span className="font-normal text-brand-grey">
-                      ({t.optional})
-                    </span>
-                  </label>
-                  {uploadsEnabled ? (
-                    <div className="rounded-xl border border-dashed border-ink/25 bg-paper p-5">
-                      <FileUp className="mb-3 text-brand-blue" size={24} />
-                      <Input
-                        id="resume"
-                        type="file"
-                        accept=".pdf,.doc,.docx"
-                        onChange={(e) => {
-                          const next = e.target.files?.[0];
-                          if (
-                            next &&
-                            !validateResume(next.name, next.type, next.size)
-                          ) {
-                            setMessage(t.resumeHint);
-                            e.target.value = "";
-                            setFile(null);
-                          } else {
-                            setFile(next || null);
-                            setMessage("");
-                          }
-                        }}
-                        className="border-0 bg-transparent p-0 text-sm file:mr-3 file:rounded-lg file:border-0 file:bg-white file:px-3 file:py-2"
-                      />
-                      <p className="mt-2 text-xs text-brand-grey">
-                        {t.resumeHint}
-                      </p>
-                    </div>
-                  ) : (
-                    <p className="rounded-xl bg-paper p-4 text-xs leading-6 text-brand-grey">
-                      {t.uploadDisabled}
-                    </p>
-                  )}
-                </div>
-                <div className="hidden" aria-hidden="true">
-                  <label htmlFor="website">Website</label>
-                  <input
-                    id="website"
-                    {...register("website")}
-                    tabIndex={-1}
-                    autoComplete="off"
-                  />
-                </div>
-                <label className="flex min-h-11 items-start gap-3 text-xs leading-6 text-brand-grey md:col-span-2">
-                  <input
-                    type="checkbox"
-                    {...register("consent")}
-                    aria-invalid={!!errors.consent}
-                    className="mt-1 size-5 shrink-0 accent-brand-blue"
-                  />
-                  {t.consent}
-                </label>
-                <div className="md:col-span-2">
-                  {message && (
-                    <p
-                      role="alert"
-                      className="my-4 rounded-xl bg-red-50 p-4 text-sm text-red-800"
-                    >
-                      {message}
-                    </p>
-                  )}
-                  <Button
-                    type="submit"
-                    disabled={isSubmitting}
-                    className="mt-4 w-full"
-                  >
-                    {isSubmitting ? t.sending : t.send}
-                    <ArrowUpRight size={18} />
-                  </Button>
-                  <p className="mt-4 text-center text-xs text-brand-grey">
-                    {t.reviewNote}
                   </p>
                 </div>
-              </fieldset>
-            </form>
-          )}
+                <Button asChild variant="outline">
+                  <a href="#main">{t.another}</a>
+                </Button>
+              </div>
+            ) : (
+              <form
+                onSubmit={handleSubmit(submit, () => setMessage(t.required))}
+                noValidate
+                className="rounded-xs border border-ink/10 bg-white lg:col-span-8"
+              >
+                <div className="border-b border-ink/10 px-6 py-5 md:px-9">
+                  <div className="mb-3 flex justify-between font-mono text-[11px] uppercase tracking-wider text-brand-grey">
+                    <span>{t.progress}</span>
+                    <span className="tabular-nums text-brand-blue">
+                      {Math.round(progress * 100)}%
+                    </span>
+                  </div>
+                  <div
+                    role="progressbar"
+                    aria-label={t.progress}
+                    aria-valuenow={Math.round(progress * 100)}
+                    aria-valuemin={0}
+                    aria-valuemax={100}
+                    className="relative h-1.5 overflow-hidden bg-paper"
+                  >
+                    <div
+                      className="h-full origin-left bg-brand-orange transition-transform duration-300 ease-out motion-reduce:transition-none"
+                      style={{ transform: `scaleX(${progress})` }}
+                    />
+                    <div
+                      aria-hidden="true"
+                      className="absolute inset-0 grid grid-cols-6"
+                    >
+                      {[0, 1, 2, 3, 4, 5].map((tick) => (
+                        <span
+                          key={tick}
+                          className="border-r-2 border-white last:border-r-0"
+                        />
+                      ))}
+                    </div>
+                  </div>
+                </div>
+                <fieldset
+                  disabled={isSubmitting}
+                  className="grid gap-6 p-6 md:grid-cols-2 md:p-9"
+                >
+                  {field("full_name", t.fullName)}
+                  {field("phone", t.phone, "9876543210")}
+                  <div>
+                    <label htmlFor="job" className={labelClass}>
+                      {t.job} <span className="text-brand-orange">*</span>
+                    </label>
+                    <Select
+                      id="job"
+                      {...register("job")}
+                      aria-invalid={!!errors.job}
+                    >
+                      <option value="any">{t.anyRole}</option>
+                      {jobs.map((job) => (
+                        <option key={job.slug} value={job.slug}>
+                          {t.jobTitles[job.title] || job.title}
+                        </option>
+                      ))}
+                    </Select>
+                  </div>
+                  {field("preferred_location", t.location, t.locationHint)}
+                  <div>
+                    <label htmlFor="qualification" className={labelClass}>
+                      {t.qualification}{" "}
+                      <span className="text-brand-orange">*</span>
+                    </label>
+                    <Select
+                      id="qualification"
+                      {...register("qualification")}
+                      aria-invalid={!!errors.qualification}
+                    >
+                      <option value="">{t.choose}</option>
+                      {qualifications.map((q, i) => (
+                        <option key={q} value={q}>
+                          {t.qualificationsList[i]}
+                        </option>
+                      ))}
+                    </Select>
+                    {errors.qualification && (
+                      <p className="mt-2 text-xs text-red-700">{t.required}</p>
+                    )}
+                  </div>
+                  <div>
+                    <label htmlFor="experience" className={labelClass}>
+                      {t.experience}{" "}
+                      <span className="font-normal text-brand-grey">
+                        ({t.optional})
+                      </span>
+                    </label>
+                    <Select id="experience" {...register("experience")}>
+                      <option value="">{t.choose}</option>
+                      {experiences.map((e, i) => (
+                        <option key={e} value={e}>
+                          {t.expOptions[i]}
+                        </option>
+                      ))}
+                    </Select>
+                  </div>
+                  <div className="md:col-span-2">
+                    <label htmlFor="resume" className={labelClass}>
+                      {t.resume}{" "}
+                      <span className="font-normal text-brand-grey">
+                        ({t.optional})
+                      </span>
+                    </label>
+                    {uploadsEnabled ? (
+                      <div className="rounded-xs border border-dashed border-brand-blue/40 bg-brand-blue-soft/50 p-5">
+                        <FileUp className="mb-3 text-brand-blue" size={22} />
+                        <Input
+                          id="resume"
+                          type="file"
+                          accept=".pdf,.doc,.docx"
+                          onChange={(e) => {
+                            const next = e.target.files?.[0];
+                            if (
+                              next &&
+                              !validateResume(next.name, next.type, next.size)
+                            ) {
+                              setMessage(t.resumeHint);
+                              e.target.value = "";
+                              setFile(null);
+                            } else {
+                              setFile(next || null);
+                              setMessage("");
+                            }
+                          }}
+                          className="min-h-0 border-0 bg-transparent p-0 text-sm hover:border-0 file:mr-3 file:rounded-xs file:border-0 file:bg-brand-blue file:px-3 file:py-2 file:text-white"
+                        />
+                        <p className="mt-2 font-mono text-[11px] text-brand-grey">
+                          {t.resumeHint}
+                        </p>
+                      </div>
+                    ) : (
+                      <p className="rounded-xs border border-ink/10 bg-paper p-4 text-xs leading-6 text-brand-grey">
+                        {t.uploadDisabled}
+                      </p>
+                    )}
+                  </div>
+                  <div className="hidden" aria-hidden="true">
+                    <label htmlFor="website">Website</label>
+                    <input
+                      id="website"
+                      {...register("website")}
+                      tabIndex={-1}
+                      autoComplete="off"
+                    />
+                  </div>
+                  <label className="flex min-h-11 items-start gap-3 border-t border-ink/10 pt-6 text-xs leading-6 text-brand-grey md:col-span-2">
+                    <input
+                      type="checkbox"
+                      {...register("consent")}
+                      aria-invalid={!!errors.consent}
+                      className="mt-1 size-5 shrink-0 accent-brand-blue"
+                    />
+                    {t.consent}
+                  </label>
+                  <div className="md:col-span-2">
+                    {message && (
+                      <p
+                        role="alert"
+                        className="mb-4 rounded-xs border-l-2 border-red-600 bg-red-50 p-4 text-sm text-red-800"
+                      >
+                        {message}
+                      </p>
+                    )}
+                    <Button
+                      type="submit"
+                      disabled={isSubmitting}
+                      className="w-full py-4"
+                    >
+                      {isSubmitting ? t.sending : t.send}
+                      <ArrowUpRight size={18} />
+                    </Button>
+                    <p className="mt-4 text-center text-xs text-brand-grey">
+                      {t.reviewNote}
+                    </p>
+                  </div>
+                </fieldset>
+              </form>
+            )}
+          </Container>
         </section>
         <Faq mini />
       </main>

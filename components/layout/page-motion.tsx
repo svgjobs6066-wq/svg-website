@@ -76,7 +76,7 @@ export function PageMotion() {
       />
       <div
         data-transition-panel
-        className="h-1/3 origin-right scale-x-0 bg-brand-green"
+        className="h-1/3 origin-right scale-x-0 bg-brand-blue-deep"
       />
     </div>
   );
