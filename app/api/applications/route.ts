@@ -6,7 +6,6 @@ import {
   errorResponse,
   rateLimit,
   readJson,
-  retentionDays,
 } from "@/lib/api";
 export async function POST(request: Request) {
   try {
@@ -67,9 +66,7 @@ export async function POST(request: Request) {
         );
       jobId = job.id;
     }
-    const days = retentionDays();
-    if (resumePath && !days)
-      throw new ApiError(503, "Resume uploads are not enabled.");
+
     const { data, error } = await db.rpc("submit_application", {
       p_id: id,
       p_name: input.full_name,
@@ -80,7 +77,7 @@ export async function POST(request: Request) {
       p_experience: input.experience || null,
       p_resume: resumePath,
       p_ticket: input.uploadTicket || null,
-      p_retention_days: days,
+      p_retention_days: null,
     });
     if (error) {
       if (error.code === "23505")

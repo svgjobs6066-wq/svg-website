@@ -3,6 +3,12 @@ import { errorResponse } from "@/lib/api";
 export async function GET() {
   try {
     const { db, role } = await requireStaff();
+    if (role === "supervisor") {
+      return Response.json(
+        { counts: [], role, recruiters: [] },
+        { headers: { "Cache-Control": "no-store" } },
+      );
+    }
     const results = await Promise.all([
       db
         .from("applications")
@@ -11,11 +17,11 @@ export async function GET() {
       db
         .from("applications")
         .select("id", { count: "exact", head: true })
-        .eq("reviewed", true),
+        .eq("status", "contacted"),
       db
         .from("applications")
         .select("id", { count: "exact", head: true })
-        .eq("status", "shortlisted"),
+        .eq("status", "no_response"),
       db
         .from("applications")
         .select("id", { count: "exact", head: true })
@@ -23,8 +29,7 @@ export async function GET() {
       db
         .from("applications")
         .select("id", { count: "exact", head: true })
-        .not("resume_path", "is", null)
-        .not("delete_after", "is", null),
+        .eq("status", "not_fit"),
     ]);
     for (const result of results) if (result.error) throw result.error;
     const { data: recruiters } =

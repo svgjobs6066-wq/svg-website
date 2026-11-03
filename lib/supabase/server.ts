@@ -39,7 +39,7 @@ export async function requireStaff() {
     .select("role")
     .eq("id", user.id)
     .single();
-  if (!profile || !["admin", "recruiter"].includes(profile.role))
+  if (!profile || !["admin", "recruiter", "supervisor"].includes(profile.role))
     throw new Error("FORBIDDEN");
-  return { db, user, role: profile.role as "admin" | "recruiter" };
+  return { db, user, role: profile.role as "admin" | "recruiter" | "supervisor" };
 }

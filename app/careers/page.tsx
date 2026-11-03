@@ -1,7 +1,6 @@
 import { Suspense } from "react";
 import { Careers } from "@/components/careers/careers";
 import { getJobs } from "@/lib/supabase/jobs";
-import { retentionDays } from "@/lib/api";
 export const metadata = { title: "Careers" };
 async function Content({
   searchParams,
@@ -13,7 +12,7 @@ async function Content({
     <Careers
       jobs={jobs}
       initialJob={params.job || "any"}
-      uploadsEnabled={retentionDays() > 0}
+      uploadsEnabled={Boolean(process.env.NEXT_PUBLIC_SUPABASE_URL)}
     />
   );
 }

@@ -21,6 +21,14 @@ Without credentials, public pages show the ten blueprint seed roles. During loca
 
 ## Supabase installation
 
+### Supervisor access update
+
+Admin sidebar entries now separate **Supervisors** (`/admin/supervisors`) from **Audit logs** (`/admin/logs`). Audit logs support reference/name search, staff email, action, resulting status, and UTC date filters with 50 events per page. Each linked SVG reference opens the full application detail panel. Application history links open the audit page filtered to that application.
+
+After the initial recruitment migration, apply `supabase/migrations/202611030001_supervisors.sql` in the Supabase SQL editor. Then sign in as admin and open `/admin/supervisors` to create supervisor email/password accounts or delete them. Supervisors use `/admin/login`, can see all applications, and can change only their status. Admins can view status history from each application's detail panel.
+
+The migration changes application statuses to new, contacted, no response, selected, not fit, and close. Existing shortlisted/interview entries become contacted, joined becomes selected, not selected becomes not fit, and withdrawn becomes close. Future application updates record the acting user's email and role alongside the status change; this identity survives account deletion. Older audit entries retain their original user IDs.
+
 The configured project was reachable during development, but its API reported `PGRST205` (the recruitment `jobs` table is missing). Apply the migration below before enabling live applications. The local development site continues showing the seed roles until then.
 
 1. Apply `supabase/migrations/202611020001_recruitment.sql` with Supabase CLI migrations or the SQL editor. This creates tables, the ten seed jobs, RLS, a private 5 MB resume bucket, atomic duplicate prevention, audit logging and retention triggers.
@@ -38,6 +46,10 @@ For a recruiter use `recruiter`. Admins assign applications from the detail draw
 5. The database rate limiter accepts at most ten submissions/uploads per hashed IP per hour, scoped separately. On Vercel it uses the platform forwarded-IP header. If deploying behind another proxy, configure its trusted client-IP handling in `lib/api.ts`.
 
 ## Resume uploads and deletion
+
+**Current policy: manual deletion only.** Apply `supabase/migrations/202611030002_manual_deletion.sql` after the supervisor migration. It disables automatic purge claims, removes all scheduled resume deadlines, unschedules the old cron job, and adds the admin-only deletion operation. Deploy the retired `purge-resumes` function (now a no-op returning HTTP 410) if it was previously deployed; stop any in-flight old purge before switching. The historical retention instructions below no longer apply. `RESUME_MAX_RETENTION_DAYS` is no longer used.
+
+Admins can delete one application from its details or select up to 50 rows and choose **Delete selected**. Confirmation includes permanent removal of application data and attached resumes. Storage removal happens before database deletion; if finalization fails, retry the operation. Audit history and SVG references remain, with deleted references shown as text instead of links. No live data is deleted by applying the code changes alone.
 
 Approve the maximum retention policy, then set `RESUME_MAX_RETENTION_DAYS` (the blueprint suggests 90; it is deliberately not assumed). Leaving this empty disables optional resume uploads, while the application form remains usable. Privacy text reflects the configured period. Review the entire notice with the company, including application-data retention and the contact channel, before publication.
 

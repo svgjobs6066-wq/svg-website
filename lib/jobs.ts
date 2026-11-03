@@ -41,10 +41,8 @@ export const seedJobs: Job[] = [
 export const statuses = [
   "new",
   "contacted",
-  "shortlisted",
-  "interview",
+  "no_response",
   "selected",
-  "joined",
-  "not_selected",
-  "withdrawn",
+  "not_fit",
+  "close",
 ] as const;

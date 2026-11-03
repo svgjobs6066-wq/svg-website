@@ -17,7 +17,6 @@ export async function GET() {
       "qualification",
       "experience",
       "status",
-      "reviewed",
       "created_at",
     ];
     const rows: string[] = [columns.join(",")];

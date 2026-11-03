@@ -5,10 +5,8 @@ import { Container, Eyebrow, Index } from "./ui/swiss";
 import { IsoArt } from "./iso/iso-art";
 export function Legal({
   kind,
-  days,
 }: {
   kind: "privacy" | "terms";
-  days?: number;
 }) {
   const { t, language } = useLanguage();
   const sections = kind === "privacy" ? t.privacySections : t.termsSections;
@@ -47,10 +45,10 @@ export function Legal({
                     {title}
                   </h2>
                   <p className="text-sm leading-7 text-brand-grey">
-                    {kind === "privacy" && i === 1 && days
+                    {kind === "privacy" && i === 1
                       ? language === "en"
-                        ? `Resumes are deleted 10 days after being marked Reviewed, or ${days} days after submission, whichever comes first. Unmarking Reviewed cancels the review timer, but the maximum retention period still applies. Application data remains after resume deletion.`
-                        : `பரிசீலிக்கப்பட்டதாகக் குறித்த 10 நாட்களில் அல்லது விண்ணப்பித்த ${days} நாட்களில், எது முதலில் வருகிறதோ அப்போது சுயவிவரம் நீக்கப்படும். குறியை நீக்கினாலும் அதிகபட்சச் சேமிப்புக் காலம் பொருந்தும். விண்ணப்ப விவரங்கள் தொடரும்.`
+                        ? "Applications and resumes are kept until an administrator manually deletes them. Automatic deletion is disabled. Audit records are retained to track changes and deletions."
+                        : "விண்ணப்பங்களும் சுயவிவரங்களும் நிர்வாகி கைமுறையாக நீக்கும் வரை சேமிக்கப்படும். தானியங்கி நீக்கம் இல்லை. மாற்றங்கள் மற்றும் நீக்கங்களின் பதிவுகள் பாதுகாக்கப்படும்."
                       : content}
                   </p>
                 </div>

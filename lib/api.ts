@@ -66,7 +66,3 @@ export async function rateLimit(request: Request, scope: string) {
   if (!data)
     throw new ApiError(429, "Too many requests. Please try again in an hour.");
 }
-export function retentionDays() {
-  const days = Number(process.env.RESUME_MAX_RETENTION_DAYS);
-  return Number.isInteger(days) && days > 0 && days <= 365 ? days : 0;
-}

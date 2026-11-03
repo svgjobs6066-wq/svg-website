@@ -1,5 +1,30 @@
 @import "tailwindcss";
 
+@keyframes brand-intro {
+  from { opacity: 0; transform: translateY(5px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes brand-rule {
+  from { transform: scaleX(0); }
+  to { transform: scaleX(1); }
+}
+
+.brand-intro {
+  animation: brand-intro 0.65s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+}
+
+.brand-intro-rule {
+  animation: brand-rule 0.7s ease-out 0.18s both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .brand-intro,
+  .brand-intro-rule {
+    animation: none;
+  }
+}
+
 @theme {
   --color-brand-blue: #2445a2;
   --color-brand-blue-deep: #182f74;

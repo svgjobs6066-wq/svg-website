@@ -6,15 +6,13 @@ import {
   errorResponse,
   rateLimit,
   readJson,
-  retentionDays,
 } from "@/lib/api";
 import { validateResume } from "@/lib/validation";
 export async function POST(request: Request) {
   try {
     checkOrigin(request);
     await rateLimit(request, "upload");
-    if (!retentionDays())
-      throw new ApiError(503, "Resume uploads are not enabled yet.");
+
     const body = z
       .object({
         name: z.string().max(200),

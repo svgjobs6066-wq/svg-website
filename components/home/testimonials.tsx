@@ -99,17 +99,14 @@ export function Testimonials() {
           </div>
         </div>
         <div className="grid gap-2 lg:grid-cols-3">
-          {stories.map((story, index) => {
-            const featured = index === 1;
+          {stories.map((story) => {
             return (
               <figure
                 data-reveal
                 key={story.initials}
                 className={cn(
                   "relative flex flex-col rounded-xs border p-7 transition-[border-color] duration-200 md:p-9",
-                  featured
-                    ? "border-brand-blue bg-brand-blue blueprint-grid text-white"
-                    : "border-ink/10 bg-paper text-ink hover:border-brand-blue/40",
+                  "border-brand-blue bg-brand-blue blueprint-grid text-white",
                 )}
               >
                 <div className="mb-10 flex items-center justify-between gap-4">
@@ -117,16 +114,12 @@ export function Testimonials() {
                     size={34}
                     strokeWidth={1.25}
                     aria-hidden="true"
-                    className={
-                      featured ? "text-brand-orange" : "text-brand-blue"
-                    }
+                    className={"text-brand-orange"}
                   />
                   <span
                     className={cn(
                       "rounded-xs px-2.5 py-1.5 font-mono text-[10px] tracking-wider",
-                      featured
-                        ? "bg-white/10 text-white"
-                        : "bg-white text-brand-grey",
+                      "bg-white/10 text-white",
                     )}
                   >
                     {tamil ? "மாதிரி வாசகம்" : "SAMPLE TESTIMONIAL"}
@@ -135,7 +128,7 @@ export function Testimonials() {
                 <p
                   className={cn(
                     "mb-4 font-mono text-[11px] uppercase tracking-wider",
-                    featured ? "text-white/75" : "text-brand-blue",
+                    "text-white/75",
                   )}
                 >
                   {story.topic}
@@ -146,28 +139,21 @@ export function Testimonials() {
                 <figcaption
                   className={cn(
                     "mt-auto flex items-center gap-4 border-t pt-6",
-                    featured ? "border-white/25" : "border-ink/10",
+                    "border-white/25",
                   )}
                 >
                   <span
                     aria-hidden="true"
                     className={cn(
                       "flex size-11 shrink-0 items-center justify-center rounded-xs font-mono text-sm font-semibold",
-                      featured
-                        ? "bg-brand-orange text-ink"
-                        : "bg-white text-brand-blue",
+                      "bg-brand-orange text-ink",
                     )}
                   >
                     {story.initials}
                   </span>
                   <div>
                     <p className="text-sm font-semibold">{story.role}</p>
-                    <p
-                      className={cn(
-                        "mt-1 text-xs",
-                        featured ? "text-white/75" : "text-brand-grey",
-                      )}
-                    >
+                    <p className={cn("mt-1 text-xs", "text-white/75")}>
                       {tamil ? "விளக்கத்திற்கான மாதிரி" : "Illustrative story"}
                     </p>
                   </div>

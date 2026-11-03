@@ -14,6 +14,8 @@ import {
   ChevronLeft,
   ChevronRight,
 } from "lucide-react";
+import { Supervisors } from "./supervisors";
+import { AuditLogs } from "./audit-logs";
 import { Wordmark } from "@/components/layout/site-shell";
 import { Button } from "@/components/ui/button";
 import { Input, Select, fieldClass } from "@/components/ui/input";
@@ -30,10 +32,6 @@ type Application = {
   experience: string | null;
   status: string;
   notes: string | null;
-  reviewed: boolean;
-  reviewed_at: string | null;
-  delete_after: string | null;
-  maximum_delete_at: string | null;
   resume_deleted_at: string | null;
   resume_path: string | null;
   created_at: string;
@@ -96,8 +94,10 @@ export function Login() {
                 throw new Error(
                   "Could not sign in. Check your email and password.",
                 );
-              await api("/api/admin/stats");
-              router.push("/admin");
+              const staff = await api("/api/admin/stats");
+              router.push(
+                staff.role === "supervisor" ? "/admin/applications" : "/admin",
+              );
               router.refresh();
             } catch (error) {
               setError(
@@ -171,10 +171,10 @@ export function Workspace({
   view,
   role,
 }: {
-  view: "dashboard" | "applications" | "jobs";
-  role: "admin" | "recruiter";
+  view: "dashboard" | "applications" | "jobs" | "supervisors" | "logs";
+  role: "admin" | "recruiter" | "supervisor";
 }) {
-  const [now, setNow] = useState(0);
+  const [checked, setChecked] = useState<string[]>([]);
   const router = useRouter();
   const [applications, setApplications] = useState<Application[]>([]);
   const [jobs, setJobs] = useState<Job[]>([]);
@@ -193,6 +193,10 @@ export function Workspace({
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
   const load = useCallback(async () => {
+    if (view === "supervisors" || view === "logs") {
+      setLoading(false);
+      return;
+    }
     setLoading(true);
     try {
       const params = new URLSearchParams({
@@ -208,7 +212,7 @@ export function Workspace({
         api("/api/admin/jobs"),
         api("/api/admin/stats"),
       ]);
-      setNow(Date.now());
+      setChecked([]);
       setApplications(apps.applications);
       setTotal(apps.count);
       setJobs(openingData.jobs);
@@ -220,11 +224,28 @@ export function Workspace({
     } finally {
       setLoading(false);
     }
-  }, [search, status, jobFilter, date, sort, page]);
+  }, [search, status, jobFilter, date, sort, page, view]);
   useEffect(() => {
     const timer = setTimeout(() => void load(), 250);
     return () => clearTimeout(timer);
   }, [load]);
+  useEffect(() => {
+    const id = new URLSearchParams(window.location.search).get("application");
+    if (view !== "applications" || !id) return;
+    let active = true;
+    void api("/api/admin/applications?id=" + encodeURIComponent(id))
+      .then((data) => {
+        if (!active) return;
+        if (data.applications[0]) setSelected(data.applications[0]);
+        else setError("Application not found or access denied.");
+      })
+      .catch((e) => {
+        if (active) setError(e.message);
+      });
+    return () => {
+      active = false;
+    };
+  }, [view]);
   async function update(id: string, change: Record<string, unknown>) {
     setBusy(true);
     try {
@@ -236,6 +257,32 @@ export function Workspace({
       setSelected(null);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Update failed");
+    } finally {
+      setBusy(false);
+    }
+  }
+  async function deleteApplications(ids: string[]) {
+    if (
+      !ids.length ||
+      !window.confirm(
+        "Permanently delete " +
+          ids.length +
+          " application(s) and their resumes? Audit history will be kept.",
+      )
+    )
+      return;
+    setBusy(true);
+    setError("");
+    try {
+      await api("/api/admin/applications", {
+        method: "DELETE",
+        body: JSON.stringify({ ids }),
+      });
+      setSelected(null);
+      setChecked([]);
+      await load();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Deletion failed");
     } finally {
       setBusy(false);
     }
@@ -262,12 +309,6 @@ export function Workspace({
       return <span className="text-brand-grey">Resume deleted</span>;
     if (!a.resume_path)
       return <span className="text-brand-grey">No resume</span>;
-    const dates = [a.delete_after, a.maximum_delete_at]
-      .filter(Boolean)
-      .map((d) => new Date(d!).getTime());
-    const days = dates.length
-      ? Math.max(0, Math.ceil((Math.min(...dates) - now) / 86400000))
-      : null;
     return (
       <div>
         <button
@@ -278,15 +319,26 @@ export function Workspace({
           <Download size={14} />
           Download
         </button>
-        {days !== null && (
-          <p className="text-[11px] text-amber-800">
-            {days === 0 ? "Deletion pending" : `Deletes in ${days} days`}
-          </p>
-        )}
       </div>
     );
   }
   const nav = [
+    ...(role === "admin"
+      ? [
+          {
+            key: "supervisors",
+            href: "/admin/supervisors",
+            label: "Supervisors",
+            icon: Users,
+          },
+          {
+            key: "logs",
+            href: "/admin/logs",
+            label: "Audit logs",
+            icon: LayoutDashboard,
+          },
+        ]
+      : []),
     {
       key: "dashboard",
       href: "/admin",
@@ -330,16 +382,20 @@ export function Workspace({
       <div className="grid lg:grid-cols-[230px_1fr]">
         <aside className="border-b border-ink/10 bg-white p-4 lg:min-h-[calc(100vh-94px)] lg:border-r">
           <nav className="flex flex-wrap gap-2 lg:flex-col">
-            {nav.map(({ key, href, label, icon: Icon }) => (
-              <Link
-                key={key}
-                href={href}
-                className={`flex min-h-12 items-center gap-3 rounded-xl px-4 text-sm font-semibold ${view === key ? "bg-blue-50 text-brand-blue" : "text-brand-grey hover:bg-paper"}`}
-              >
-                <Icon size={18} />
-                {label}
-              </Link>
-            ))}
+            {nav
+              .filter(
+                ({ key }) => role !== "supervisor" || key === "applications",
+              )
+              .map(({ key, href, label, icon: Icon }) => (
+                <Link
+                  key={key}
+                  href={href}
+                  className={`flex min-h-12 items-center gap-3 rounded-xl px-4 text-sm font-semibold ${view === key ? "bg-blue-50 text-brand-blue" : "text-brand-grey hover:bg-paper"}`}
+                >
+                  <Icon size={18} />
+                  {label}
+                </Link>
+              ))}
           </nav>
           <Link
             href="/"
@@ -350,286 +406,338 @@ export function Workspace({
           </Link>
         </aside>
         <main id="main" className="min-w-0 p-4 md:p-8 xl:p-12">
-          <p className="mb-3 text-xs font-semibold tracking-widest text-brand-blue">
-            RECRUITMENT WORKSPACE
-          </p>
-          <div className="mb-8 flex flex-wrap items-center justify-between gap-5">
-            <div>
-              <h1 className="text-3xl font-bold tracking-tight">
-                {view === "dashboard"
-                  ? "A view of what’s next."
-                  : view === "applications"
-                    ? "Your next great people."
-                    : "Make room for talent."}
-              </h1>
-              <p className="mt-3 text-sm text-brand-grey">
-                {role === "recruiter"
-                  ? "Showing applications assigned to you."
-                  : "Manage the people and opportunities moving SVG forward."}
-              </p>
-            </div>
-            {view === "applications" && role === "admin" && (
-              <Button asChild variant="outline">
-                <a href="/api/admin/export">
-                  <Download size={16} />
-                  Export all CSV
-                </a>
-              </Button>
-            )}
-            {view === "jobs" && role === "admin" && (
-              <Button onClick={() => setEditing({ ...blankJob })}>
-                <Plus size={17} />
-                Add opening
-              </Button>
-            )}
-          </div>
-          {error && (
-            <div
-              role="alert"
-              className="mb-6 rounded-xl bg-red-50 p-4 text-sm text-red-800"
-            >
-              {error}
-              <button className="ml-4 underline" onClick={() => void load()}>
-                Retry
-              </button>
-            </div>
-          )}
-          {view === "dashboard" && (
-            <div className="mb-10 grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
-              {[
-                "New",
-                "Reviewed",
-                "Shortlisted",
-                "Selected",
-                "Resumes pending deletion",
-              ].map((label, i) => (
-                <div
-                  key={label}
-                  className="rounded-2xl border border-ink/10 bg-white p-6"
-                >
-                  <p className="text-xs text-brand-grey">{label}</p>
-                  <p className="mt-5 text-4xl font-bold text-brand-blue">
-                    {counts.length ? counts[i] : "—"}
-                  </p>
-                </div>
-              ))}
-            </div>
-          )}
-          {view !== "jobs" && (
+          {view === "supervisors" ? (
+            <Supervisors />
+          ) : view === "logs" ? (
+            <AuditLogs />
+          ) : null}
+          {view !== "supervisors" && view !== "logs" && (
             <>
-              <div className="mb-5 flex flex-wrap gap-3">
-                <div className="relative grow">
-                  <Search
-                    size={16}
-                    className="absolute left-4 top-4 text-brand-grey"
-                  />
-                  <Input
-                    aria-label="Search applications"
-                    placeholder="Search name, phone or reference"
-                    value={search}
-                    onChange={(e) => {
-                      setSearch(e.target.value);
-                      setPage(0);
-                    }}
-                    className="pl-11"
-                  />
-                </div>
-                <Select
-                  aria-label="Filter by job"
-                  className="w-auto"
-                  value={jobFilter}
-                  onChange={(e) => {
-                    setJobFilter(e.target.value);
-                    setPage(0);
-                  }}
-                >
-                  <option value="">All jobs</option>
-                  {jobs.map((j) => (
-                    <option key={j.id} value={j.id}>
-                      {j.title}
-                    </option>
-                  ))}
-                </Select>
-                <Select
-                  aria-label="Filter by status"
-                  className="w-auto"
-                  value={status}
-                  onChange={(e) => {
-                    setStatus(e.target.value);
-                    setPage(0);
-                  }}
-                >
-                  <option value="">All statuses</option>
-                  {statuses.map((s) => (
-                    <option key={s} value={s}>
-                      {s.replaceAll("_", " ")}
-                    </option>
-                  ))}
-                </Select>
-                <Input
-                  aria-label="Filter by date"
-                  type="date"
-                  className="w-auto"
-                  value={date}
-                  onChange={(e) => {
-                    setDate(e.target.value);
-                    setPage(0);
-                  }}
-                />
-                <Select
-                  aria-label="Sort applications"
-                  className="w-auto"
-                  value={sort}
-                  onChange={(e) => {
-                    setSort(e.target.value);
-                    setPage(0);
-                  }}
-                >
-                  <option value="newest">Newest first</option>
-                  <option value="oldest">Oldest first</option>
-                </Select>
-              </div>
-              <div className="overflow-x-auto rounded-2xl border border-ink/10 bg-white">
-                <table className="w-full whitespace-nowrap text-left text-xs">
-                  <thead className="border-b bg-paper text-brand-grey">
-                    <tr>
-                      {[
-                        "Reference",
-                        "Name / phone",
-                        "Job",
-                        "Location",
-                        "Qualification",
-                        "Date",
-                        "Status",
-                        "Reviewed",
-                        "Resume",
-                      ].map((h) => (
-                        <th key={h} className="px-4 py-4 font-semibold">
-                          {h}
-                        </th>
-                      ))}
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {applications.map((a) => (
-                      <tr key={a.id} className="border-b border-ink/5">
-                        <td className="px-4 py-4">
-                          <button
-                            onClick={() => setSelected({ ...a })}
-                            className="min-h-11 font-semibold text-brand-blue underline underline-offset-4"
-                          >
-                            {a.ref_no}
-                          </button>
-                        </td>
-                        <td className="px-4 py-4">
-                          <button
-                            onClick={() => setSelected({ ...a })}
-                            className="min-h-11 font-semibold"
-                          >
-                            {a.full_name}
-                          </button>
-                          <p className="mt-1 text-brand-grey">{a.phone}</p>
-                        </td>
-                        <td className="px-4 py-4">
-                          {a.jobs?.title || "Any suitable role"}
-                        </td>
-                        <td className="px-4 py-4">{a.preferred_location}</td>
-                        <td className="px-4 py-4">{a.qualification}</td>
-                        <td className="px-4 py-4">
-                          {new Date(a.created_at).toLocaleDateString("en-IN")}
-                        </td>
-                        <td className="px-4 py-4">
-                          <span className="rounded-full bg-blue-50 px-3 py-2 capitalize text-brand-blue">
-                            {a.status.replaceAll("_", " ")}
-                          </span>
-                        </td>
-                        <td className="px-4 py-4">
-                          <label className="flex min-h-11 min-w-11 items-center">
-                            <input
-                              type="checkbox"
-                              className="size-5 accent-brand-blue"
-                              aria-label={`Mark ${a.full_name} reviewed`}
-                              checked={a.reviewed}
-                              disabled={busy}
-                              onChange={(e) =>
-                                void update(a.id, {
-                                  reviewed: e.target.checked,
-                                })
-                              }
-                            />
-                          </label>
-                        </td>
-                        <td className="px-4 py-4">{resumeCell(a)}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-                {!applications.length && (
-                  <p className="px-6 py-16 text-center text-sm text-brand-grey">
-                    {loading
-                      ? "Loading applications…"
-                      : "No applications match these filters."}
+              <p className="mb-3 text-xs font-semibold tracking-widest text-brand-blue">
+                RECRUITMENT WORKSPACE
+              </p>
+              <div className="mb-8 flex flex-wrap items-center justify-between gap-5">
+                <div>
+                  <h1 className="text-3xl font-bold tracking-tight">
+                    {view === "dashboard"
+                      ? "A view of what’s next."
+                      : view === "applications"
+                        ? "Your next great people."
+                        : "Make room for talent."}
+                  </h1>
+                  <p className="mt-3 text-sm text-brand-grey">
+                    {role === "recruiter"
+                      ? "Showing applications assigned to you."
+                      : "Manage the people and opportunities moving SVG forward."}
                   </p>
+                </div>
+                {view === "applications" && role === "admin" && (
+                  <Button asChild variant="outline">
+                    <a href="/api/admin/export">
+                      <Download size={16} />
+                      Export all CSV
+                    </a>
+                  </Button>
+                )}
+                {view === "jobs" && role === "admin" && (
+                  <Button onClick={() => setEditing({ ...blankJob })}>
+                    <Plus size={17} />
+                    Add opening
+                  </Button>
                 )}
               </div>
-              <div className="mt-5 flex items-center justify-between text-xs text-brand-grey">
-                <p>
-                  {total} applications · Page {page + 1}
-                </p>
-                <div className="flex gap-2">
-                  <Button
-                    variant="outline"
-                    aria-label="Previous page"
-                    disabled={page === 0 || loading}
-                    onClick={() => setPage((p) => p - 1)}
-                  >
-                    <ChevronLeft size={16} />
-                  </Button>
-                  <Button
-                    variant="outline"
-                    aria-label="Next page"
-                    disabled={(page + 1) * 50 >= total || loading}
-                    onClick={() => setPage((p) => p + 1)}
-                  >
-                    <ChevronRight size={16} />
-                  </Button>
-                </div>
-              </div>
-            </>
-          )}
-          {view === "jobs" && (
-            <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-              {jobs.map((j) => (
-                <article
-                  key={j.id}
-                  className="rounded-2xl border border-ink/10 bg-white p-6"
+              {error && (
+                <div
+                  role="alert"
+                  className="mb-6 rounded-xl bg-red-50 p-4 text-sm text-red-800"
                 >
-                  <div className="flex items-center justify-between gap-4 text-xs">
-                    <span className="text-brand-grey">{j.department}</span>
-                    <span
-                      className={`rounded-full px-3 py-2 ${j.status === "active" ? "bg-green-50 text-green-800" : "bg-paper text-brand-grey"}`}
+                  {error}
+                  <button
+                    className="ml-4 underline"
+                    onClick={() => void load()}
+                  >
+                    Retry
+                  </button>
+                </div>
+              )}
+              {view === "dashboard" && (
+                <div className="mb-10 grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
+                  {[
+                    "New",
+                    "Contacted",
+                    "No response",
+                    "Selected",
+                    "Not fit",
+                  ].map((label, i) => (
+                    <div
+                      key={label}
+                      className="rounded-2xl border border-ink/10 bg-white p-6"
                     >
-                      {j.status}
-                    </span>
+                      <p className="text-xs text-brand-grey">{label}</p>
+                      <p className="mt-5 text-4xl font-bold text-brand-blue">
+                        {counts.length ? counts[i] : "—"}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              )}
+              {view !== "jobs" && (
+                <>
+                  <div className="mb-5 flex flex-wrap gap-3">
+                    <div className="relative grow">
+                      <Search
+                        size={16}
+                        className="absolute left-4 top-4 text-brand-grey"
+                      />
+                      <Input
+                        aria-label="Search applications"
+                        placeholder="Search name, phone or reference"
+                        value={search}
+                        onChange={(e) => {
+                          setSearch(e.target.value);
+                          setPage(0);
+                        }}
+                        className="pl-11"
+                      />
+                    </div>
+                    <Select
+                      aria-label="Filter by job"
+                      className="w-auto"
+                      value={jobFilter}
+                      onChange={(e) => {
+                        setJobFilter(e.target.value);
+                        setPage(0);
+                      }}
+                    >
+                      <option value="">All jobs</option>
+                      {jobs.map((j) => (
+                        <option key={j.id} value={j.id}>
+                          {j.title}
+                        </option>
+                      ))}
+                    </Select>
+                    <Select
+                      aria-label="Filter by status"
+                      className="w-auto"
+                      value={status}
+                      onChange={(e) => {
+                        setStatus(e.target.value);
+                        setPage(0);
+                      }}
+                    >
+                      <option value="">All statuses</option>
+                      {statuses.map((s) => (
+                        <option key={s} value={s}>
+                          {s.replaceAll("_", " ")}
+                        </option>
+                      ))}
+                    </Select>
+                    <Input
+                      aria-label="Filter by date"
+                      type="date"
+                      className="w-auto"
+                      value={date}
+                      onChange={(e) => {
+                        setDate(e.target.value);
+                        setPage(0);
+                      }}
+                    />
+                    <Select
+                      aria-label="Sort applications"
+                      className="w-auto"
+                      value={sort}
+                      onChange={(e) => {
+                        setSort(e.target.value);
+                        setPage(0);
+                      }}
+                    >
+                      <option value="newest">Newest first</option>
+                      <option value="oldest">Oldest first</option>
+                    </Select>
                   </div>
-                  <h2 className="mt-6 text-xl font-bold">{j.title}</h2>
-                  <p className="mt-3 text-sm text-brand-grey">{j.highlight}</p>
-                  <p className="mt-5 text-xs text-brand-grey">
-                    {j.location || "Location to be confirmed"}
-                  </p>
                   {role === "admin" && (
-                    <Button
-                      onClick={() => setEditing({ ...j })}
-                      variant="outline"
-                      className="mt-6 w-full"
-                    >
-                      Edit opening
-                      <ArrowUpRight size={16} />
-                    </Button>
+                    <div className="mb-4 flex items-center gap-4">
+                      <Button
+                        variant="outline"
+                        disabled={busy || !checked.length}
+                        onClick={() => void deleteApplications(checked)}
+                      >
+                        Delete selected ({checked.length})
+                      </Button>
+                      <span className="text-sm text-brand-grey">
+                        Select applications on this page to delete.
+                      </span>
+                    </div>
                   )}
-                </article>
-              ))}
-            </div>
+                  <div className="overflow-x-auto rounded-2xl border border-ink/10 bg-white">
+                    <table className="w-full whitespace-nowrap text-left text-xs">
+                      <thead className="border-b bg-paper text-brand-grey">
+                        <tr>
+                          {role === "admin" && (
+                            <th className="px-4 py-4">
+                              <input
+                                type="checkbox"
+                                aria-label="Select all applications on this page"
+                                disabled={busy || !applications.length}
+                                checked={
+                                  applications.length > 0 &&
+                                  checked.length === applications.length
+                                }
+                                onChange={(e) =>
+                                  setChecked(
+                                    e.target.checked
+                                      ? applications.map((a) => a.id)
+                                      : [],
+                                  )
+                                }
+                              />
+                            </th>
+                          )}
+                          {[
+                            "Reference",
+                            "Name / phone",
+                            "Job",
+                            "Location",
+                            "Qualification",
+                            "Date",
+                            "Status",
+                            "Resume",
+                          ].map((h) => (
+                            <th key={h} className="px-4 py-4 font-semibold">
+                              {h}
+                            </th>
+                          ))}
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {applications.map((a) => (
+                          <tr key={a.id} className="border-b border-ink/5">
+                            {role === "admin" && (
+                              <td className="px-4 py-4">
+                                <input
+                                  type="checkbox"
+                                  aria-label={"Select " + a.ref_no}
+                                  disabled={busy}
+                                  checked={checked.includes(a.id)}
+                                  onChange={(e) =>
+                                    setChecked((ids) =>
+                                      e.target.checked
+                                        ? [...ids, a.id]
+                                        : ids.filter((id) => id !== a.id),
+                                    )
+                                  }
+                                />
+                              </td>
+                            )}
+                            <td className="px-4 py-4">
+                              <button
+                                onClick={() => setSelected({ ...a })}
+                                className="min-h-11 font-semibold text-brand-blue underline underline-offset-4"
+                              >
+                                {a.ref_no}
+                              </button>
+                            </td>
+                            <td className="px-4 py-4">
+                              <button
+                                onClick={() => setSelected({ ...a })}
+                                className="min-h-11 font-semibold"
+                              >
+                                {a.full_name}
+                              </button>
+                              <p className="mt-1 text-brand-grey">{a.phone}</p>
+                            </td>
+                            <td className="px-4 py-4">
+                              {a.jobs?.title || "Any suitable role"}
+                            </td>
+                            <td className="px-4 py-4">
+                              {a.preferred_location}
+                            </td>
+                            <td className="px-4 py-4">{a.qualification}</td>
+                            <td className="px-4 py-4">
+                              {new Date(a.created_at).toLocaleDateString(
+                                "en-IN",
+                              )}
+                            </td>
+                            <td className="px-4 py-4">
+                              <span className="rounded-full bg-blue-50 px-3 py-2 capitalize text-brand-blue">
+                                {a.status.replaceAll("_", " ")}
+                              </span>
+                            </td>
+                            <td className="px-4 py-4">{resumeCell(a)}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                    {!applications.length && (
+                      <p className="px-6 py-16 text-center text-sm text-brand-grey">
+                        {loading
+                          ? "Loading applications…"
+                          : "No applications match these filters."}
+                      </p>
+                    )}
+                  </div>
+                  <div className="mt-5 flex items-center justify-between text-xs text-brand-grey">
+                    <p>
+                      {total} applications · Page {page + 1}
+                    </p>
+                    <div className="flex gap-2">
+                      <Button
+                        variant="outline"
+                        aria-label="Previous page"
+                        disabled={page === 0 || loading}
+                        onClick={() => setPage((p) => p - 1)}
+                      >
+                        <ChevronLeft size={16} />
+                      </Button>
+                      <Button
+                        variant="outline"
+                        aria-label="Next page"
+                        disabled={(page + 1) * 50 >= total || loading}
+                        onClick={() => setPage((p) => p + 1)}
+                      >
+                        <ChevronRight size={16} />
+                      </Button>
+                    </div>
+                  </div>
+                </>
+              )}
+              {view === "jobs" && (
+                <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+                  {jobs.map((j) => (
+                    <article
+                      key={j.id}
+                      className="rounded-2xl border border-ink/10 bg-white p-6"
+                    >
+                      <div className="flex items-center justify-between gap-4 text-xs">
+                        <span className="text-brand-grey">{j.department}</span>
+                        <span
+                          className={`rounded-full px-3 py-2 ${j.status === "active" ? "bg-green-50 text-green-800" : "bg-paper text-brand-grey"}`}
+                        >
+                          {j.status}
+                        </span>
+                      </div>
+                      <h2 className="mt-6 text-xl font-bold">{j.title}</h2>
+                      <p className="mt-3 text-sm text-brand-grey">
+                        {j.highlight}
+                      </p>
+                      <p className="mt-5 text-xs text-brand-grey">
+                        {j.location || "Location to be confirmed"}
+                      </p>
+                      {role === "admin" && (
+                        <Button
+                          onClick={() => setEditing({ ...j })}
+                          variant="outline"
+                          className="mt-6 w-full"
+                        >
+                          Edit opening
+                          <ArrowUpRight size={16} />
+                        </Button>
+                      )}
+                    </article>
+                  ))}
+                </div>
+              )}
+            </>
           )}
         </main>
       </div>
@@ -658,12 +766,6 @@ export function Workspace({
                   "Applied",
                   new Date(selected.created_at).toLocaleString("en-IN"),
                 ],
-                [
-                  "Reviewed",
-                  selected.reviewed_at
-                    ? new Date(selected.reviewed_at).toLocaleString("en-IN")
-                    : "Not yet",
-                ],
               ].map(([label, value]) => (
                 <div key={label}>
                   <dt className="text-xs text-brand-grey">{label}</dt>
@@ -672,6 +774,23 @@ export function Workspace({
               ))}
             </dl>
             {resumeCell(selected)}
+            {role === "admin" && (
+              <Button
+                variant="outline"
+                disabled={busy}
+                onClick={() => void deleteApplications([selected.id])}
+              >
+                Delete application
+              </Button>
+            )}
+            {role === "admin" && (
+              <Link
+                href={`/admin/logs?application=${selected.id}`}
+                className="text-brand-blue underline"
+              >
+                View status history
+              </Link>
+            )}
             <label className="block text-sm">
               Status
               <Select
@@ -691,6 +810,7 @@ export function Workspace({
             <label className="block text-sm">
               Recruiter notes
               <textarea
+                disabled={role === "supervisor"}
                 className={`${fieldClass} mt-2 min-h-32`}
                 maxLength={5000}
                 value={selected.notes || ""}
@@ -727,7 +847,9 @@ export function Workspace({
               onClick={() =>
                 void update(selected.id, {
                   status: selected.status,
-                  notes: selected.notes || "",
+                  ...(role !== "supervisor"
+                    ? { notes: selected.notes || "" }
+                    : {}),
                   ...(role === "admin"
                     ? { assigned_to: selected.assigned_to }
                     : {}),

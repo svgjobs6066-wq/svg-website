@@ -313,11 +313,13 @@ export function Home({ jobs }: { jobs: Job[] }) {
               <div className="iso-on-blue relative isolate col-span-2 flex flex-col overflow-hidden rounded-xs bg-brand-blue blueprint-grid p-6 text-white sm:p-10 lg:col-span-8 lg:row-span-2 lg:min-h-[640px] xl:min-h-[700px] xl:p-14">
                 <div className="flex items-center justify-between gap-4">
                   <Eyebrow tone="light">{t.eyebrow}</Eyebrow>
-                  <span className="hidden font-mono text-[11px] tracking-[0.14em] text-white/55 sm:block">
-                    SVG / CAREERS
+                  <span className="brand-intro inline-flex flex-col items-end font-mono text-[11px] font-semibold tracking-[0.14em] text-white sm:text-xs">
+                    {t.company}
+                    <span className="brand-intro-rule mt-2 block h-0.5 w-8 origin-right bg-brand-orange" />
                   </span>
                 </div>
                 <h1
+                  key={language}
                   data-headline
                   className={cn(
                     "mt-10 font-semibold tracking-[-0.045em] lg:mt-14",
@@ -494,28 +496,25 @@ export function Home({ jobs }: { jobs: Job[] }) {
                 </div>
                 {t.qualificationsList.map((q, i) => {
                   const Icon = qualificationIcons[i] ?? Layers3;
-                  const highlighted = i === 2;
                   return (
                     <div
                       data-qualification
                       key={q}
                       className={cn(
                         "grid flex-1 grid-cols-[4rem_1fr_auto] items-stretch border-b transition-colors duration-200 last:border-b-0",
-                        highlighted
-                          ? "border-brand-blue bg-brand-blue text-white"
-                          : "border-ink/10 hover:bg-paper",
+                        "border-ink/10 hover:bg-paper",
                       )}
                     >
                       <span
                         className={cn(
                           "flex items-center justify-center border-r",
-                          highlighted ? "border-white/20" : "border-ink/10",
+                          "border-ink/10",
                         )}
                       >
                         <Index
                           value={i + 1}
                           className={
-                            highlighted ? "text-white/70" : "text-brand-orange"
+                            "text-brand-orange"
                           }
                         />
                       </span>
@@ -528,7 +527,7 @@ export function Home({ jobs }: { jobs: Job[] }) {
                           strokeWidth={1.25}
                           aria-hidden="true"
                           className={
-                            highlighted ? "text-white" : "text-brand-blue"
+                            "text-brand-blue"
                           }
                         />
                       </span>
@@ -637,9 +636,7 @@ export function Home({ jobs }: { jobs: Job[] }) {
                       <span
                         className={cn(
                           "flex size-10 items-center justify-center rounded-xs font-mono text-sm font-semibold",
-                          i === 1
-                            ? "bg-brand-orange text-ink"
-                            : "border border-white/40 bg-brand-blue",
+                          "border border-white/40 bg-brand-blue",
                         )}
                       >
                         0{i + 1}
