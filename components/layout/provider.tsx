@@ -16,10 +16,10 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
   const language = useSyncExternalStore(
     subscribe,
     getLanguage,
-    () => "en" as const,
+    getServerLanguage,
   );
   useEffect(() => {
-    document.documentElement.lang = language;
+    if (typeof document !== "undefined") document.documentElement.lang = language;
   }, [language]);
   return (
     <LanguageContext.Provider
@@ -27,7 +27,13 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
         language,
         t: language === "en" ? en : ta,
         toggle: () => {
-          localStorage.setItem("svg-language", language === "en" ? "ta" : "en");
+          if (typeof window === "undefined") return;
+          fallbackLanguage = language === "en" ? "ta" : "en";
+          try {
+            window.localStorage.setItem("svg-language", fallbackLanguage);
+          } catch {
+            // Keep switching available when browser storage is blocked.
+          }
           window.dispatchEvent(new Event("svg-language"));
         },
       }}
@@ -37,10 +43,21 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
   );
 }
 export const useLanguage = () => useContext(LanguageContext);
+let fallbackLanguage: "en" | "ta" = "en";
+function getServerLanguage(): "en" | "ta" {
+  return "en";
+}
 function getLanguage(): "en" | "ta" {
-  return localStorage.getItem("svg-language") === "ta" ? "ta" : "en";
+  if (typeof window === "undefined") return getServerLanguage();
+  try {
+    fallbackLanguage = window.localStorage.getItem("svg-language") === "ta" ? "ta" : "en";
+  } catch {
+    // Use the in-memory selection when storage is unavailable.
+  }
+  return fallbackLanguage;
 }
 function subscribe(callback: () => void) {
+  if (typeof window === "undefined") return () => {};
   window.addEventListener("storage", callback);
   window.addEventListener("svg-language", callback);
   return () => {
