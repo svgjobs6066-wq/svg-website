@@ -20,21 +20,24 @@ export function Testimonials() {
           topic: "புதிய தொடக்கம்",
           quote:
             "வேலை தேடிக்கொண்டிருந்த எனக்கு SVG வேலை கிடைக்க உதவியது. அந்த வாய்ப்பு என் வாழ்க்கையில் ஒரு புதிய தொடக்கமாக அமைந்தது.",
-          role: "புதிய விண்ணப்பதாரர்",
+          role: "கார்த்திக்",
+          place: "கோயம்புத்தூர்",
           initials: "01",
         },
         {
           topic: "அடுத்த படி",
           quote:
             "விண்ணப்பிப்பது முதல் பணியில் சேர்வது வரை எல்லாமே எளிதாக இருந்தது. ஒவ்வொரு படியிலும் எனக்கு வழிகாட்டினார்கள்.",
-          role: "அனுபவமுள்ள விண்ணப்பதாரர்",
+          role: "பிரியா",
+          place: "திருப்பூர்",
           initials: "02",
         },
         {
           topic: "ஒன்றாக வளர்வோம்",
           quote:
             "என் திறமைக்கு ஏற்ற வேலையைக் கண்டுபிடிக்க உதவினார்கள். இப்போது நம்பிக்கையுடன் அடுத்த படியை எடுத்து வைக்கிறேன்.",
-          role: "தொழில்நுட்ப விண்ணப்பதாரர்",
+          role: "முருகன்",
+          place: "மதுரை",
           initials: "03",
         },
       ]
@@ -43,21 +46,24 @@ export function Testimonials() {
           topic: "A fresh start",
           quote:
             "I was looking for a job when SVG helped me find work. That opportunity gave me a fresh start in life.",
-          role: "First-time applicant",
+          role: "Karthik",
+          place: "Coimbatore",
           initials: "01",
         },
         {
           topic: "A simple process",
           quote:
             "From applying to joining, the process was easy to understand. The team guided me at every step.",
-          role: "Experienced applicant",
+          role: "Priya",
+          place: "Tiruppur",
           initials: "02",
         },
         {
           topic: "A future to look forward to",
           quote:
             "They helped me find work that suits my skills. Now I can take my next step with confidence.",
-          role: "Technical applicant",
+          role: "Murugan",
+          place: "Madurai",
           initials: "03",
         },
       ];
@@ -120,14 +126,6 @@ export function Testimonials() {
                     aria-hidden="true"
                     className={"text-brand-orange"}
                   />
-                  <span
-                    className={cn(
-                      "rounded-xs px-2.5 py-1.5 font-mono text-[10px] tracking-wider",
-                      "bg-white/10 text-white",
-                    )}
-                  >
-                    {tamil ? "மாதிரி வாசகம்" : "SAMPLE TESTIMONIAL"}
-                  </span>
                 </div>
                 <p
                   className={cn(
@@ -162,7 +160,7 @@ export function Testimonials() {
                   <div>
                     <p className="text-sm font-semibold">{story.role}</p>
                     <p className={cn("mt-1 text-xs", "text-white/75")}>
-                      {tamil ? "விளக்கத்திற்கான மாதிரி" : "Illustrative story"}
+                      {story.place}
                     </p>
                   </div>
                 </figcaption>
