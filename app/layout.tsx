@@ -22,8 +22,8 @@ const tamil = Noto_Sans_Tamil({
 
 export const metadata: Metadata = {
   title: {
-    default: "SVG Careers — Make things. Build a career.",
-    template: "%s | SVG Careers",
+    default: "SVG Jobs — Your next job starts here.",
+    template: "%s | SVG Jobs",
   },
   description:
     "Explore machining, fabrication, assembly and office opportunities at Sree Vijeyaganapathi & Co.",

@@ -1,17 +1,17 @@
 import { test, expect } from "@playwright/test";
-test("home routes every role to Careers and has no viewport overflow", async ({
+test("home routes every role to Jobs and has no viewport overflow", async ({
   page,
 }) => {
   await page.emulateMedia({ reducedMotion: "reduce" });
   await page.goto("/");
   await expect(page.getByRole("heading", { level: 1 })).toContainText(
-    "Make things.",
+    "Your Next Job.",
   );
   await expect(page.locator("[data-job-card]")).toHaveCount(10);
   const links = await page
     .locator("[data-job-card] a")
     .evaluateAll((nodes) => nodes.map((n) => n.getAttribute("href")));
-  expect(links.every((link) => link?.startsWith("/careers?job="))).toBe(true);
+  expect(links.every((link) => link?.startsWith("/jobs?job="))).toBe(true);
   expect(
     await page.evaluate(
       () => document.documentElement.scrollWidth <= innerWidth,
@@ -25,7 +25,7 @@ test("home routes every role to Careers and has no viewport overflow", async ({
 test("job prefill, filters and language preserve form input", async ({
   page,
 }) => {
-  await page.goto("/careers?job=cnc-machine-operator");
+  await page.goto("/jobs?job=cnc-machine-operator");
   await expect(page.locator('script[src*="cloudflare"]')).toHaveCount(0);
   await expect(page.locator("#job")).toHaveValue("cnc-machine-operator");
   await page.getByRole("button", { name: "Office", exact: true }).click();
@@ -52,7 +52,7 @@ test("job prefill, filters and language preserve form input", async ({
 });
 test("application success uses the server reference (mocked API)", async ({ page }) => {
   await page.route("**/api/applications", route => route.fulfill({ status: 201, contentType: "application/json", body: JSON.stringify({ reference: "SVG-ABC123" }) }));
-  await page.goto("/careers?job=cnc-machine-operator");
+  await page.goto("/jobs?job=cnc-machine-operator");
   await page.locator("#full_name").fill("Test Applicant");
   await page.locator("#phone").fill("9876543210");
   await page.locator("#preferred_location").fill("Test location");

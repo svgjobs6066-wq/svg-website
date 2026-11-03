@@ -14,10 +14,10 @@ export default function NotFound() {
             This page has moved on.
           </h1>
           <Link
-            href="/careers"
+            href="/jobs"
             className="mt-10 inline-flex min-h-12 items-center gap-6 rounded-xs bg-brand-blue py-3 pl-5 pr-4 text-sm font-semibold text-white transition-colors hover:bg-brand-blue-deep"
           >
-            Explore careers
+            Explore jobs
             <ArrowUpRight size={18} aria-hidden="true" />
           </Link>
         </div>

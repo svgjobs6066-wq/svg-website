@@ -132,7 +132,7 @@ export function Careers({
   }
   function selectJob(slug: string) {
     setValue("job", slug, { shouldValidate: true, shouldDirty: true });
-    window.history.replaceState(null, "", `/careers?job=${slug}`);
+    window.history.replaceState(null, "", `/jobs?job=${slug}`);
     document.getElementById("application")?.scrollIntoView({
       behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches
         ? "instant"
@@ -237,7 +237,7 @@ export function Careers({
             </div>
             <div className="iso-on-blue relative flex min-h-80 items-center justify-center overflow-hidden rounded-xs bg-brand-blue blueprint-grid p-8 lg:col-span-5">
               <span className="absolute left-7 top-7 font-mono text-[11px] tracking-[0.14em] text-white/55">
-                SVG / CAREERS
+                SVG / JOBS
               </span>
               <div className="w-full max-w-md pt-6">
                 <IsoArt name="plant" />
@@ -269,7 +269,7 @@ export function Careers({
             </div>
             <div
               ref={list}
-              className="grid gap-2 md:grid-cols-2 xl:grid-cols-4"
+              className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5"
             >
               {jobs
                 .filter(

@@ -1,7 +1,7 @@
 export const en = {
   company: "Sree Vijeyaganapathi & Co.",
   tagline: "PEOPLE. PRECISION. POSSIBILITIES.",
-  careers: "Careers",
+  careers: "Jobs",
   roles: "Open roles",
   qualifications: "Qualifications",
   faq: "FAQs",
@@ -30,9 +30,9 @@ export const en = {
   allRoles: "All roles",
   locationPending: "Location to be confirmed",
   select: "Select role",
-  how: "A simple start.",
+  how: "What you want to do.",
   howLabel: "YOUR JOURNEY WITH SVG",
-  steps: ["Apply on Careers", "We call you", "Documents & joining"],
+  steps: ["Apply on Jobs", "We contact you", "Get Hired"],
   stepNotes: [
     "Choose a role and tell us a little about yourself.",
     "Our team reviews your application and contacts you if shortlisted.",

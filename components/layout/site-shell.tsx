@@ -9,17 +9,27 @@ import { Button } from "@/components/ui/button";
 import { Sheet } from "@/components/ui/sheet";
 import { Container } from "@/components/ui/swiss";
 import { cn } from "@/lib/utils";
-export function Wordmark({ light = false }: { light?: boolean }) {
+export function Wordmark({
+  light = false,
+  dark = false,
+}: {
+  light?: boolean;
+  dark?: boolean;
+}) {
   const { t } = useLanguage();
+  const logoPath = dark
+    ? process.env.NEXT_PUBLIC_DARK_LOGO_PATH ||
+      process.env.NEXT_PUBLIC_LOGO_PATH
+    : process.env.NEXT_PUBLIC_LOGO_PATH;
   return (
     <Link
       href="/"
       aria-label={t.company}
       className="flex items-center gap-3 rounded-xs focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-brand-orange"
     >
-      {process.env.NEXT_PUBLIC_LOGO_PATH ? (
+      {logoPath ? (
         <Image
-          src={process.env.NEXT_PUBLIC_LOGO_PATH}
+          src={logoPath}
           alt="SVG"
           width={100}
           height={56}
@@ -47,7 +57,7 @@ export function Header() {
   const { t, language, toggle } = useLanguage();
   const [open, setOpen] = useState(false);
   const links = [
-    [t.roles, "/#roles"],
+    [language === "ta" ? "தற்போதைய வேலைகள்" : "Current jobs", "/jobs"],
     // [t.qualifications, "/#qualifications"],
     [t.faq, "/#faq"],
   ];
@@ -100,7 +110,7 @@ export function Header() {
               </span>
             </button>
             <Button asChild className="hidden min-h-11 sm:inline-flex">
-              <Link href="/careers">
+              <Link href="/jobs">
                 {t.careers}
                 <ArrowUpRight size={17} />
               </Link>
@@ -131,7 +141,7 @@ export function Header() {
             </Link>
           ))}
           <Button asChild className="mt-4">
-            <Link href="/careers" onClick={() => setOpen(false)}>
+            <Link href="/jobs" onClick={() => setOpen(false)}>
               {t.apply}
               <ArrowRight size={18} />
             </Link>
@@ -144,7 +154,7 @@ export function Header() {
 export function Footer() {
   const { t } = useLanguage();
   const links = [
-    [t.careers, "/careers"],
+    [t.careers, "/jobs"],
     [t.privacy, "/privacy"],
     [t.terms, "/terms"],
   ];
@@ -153,7 +163,7 @@ export function Footer() {
       <Container>
         <div className="grid gap-10 border-b border-white/15 pb-12 md:grid-cols-12">
           <div className="md:col-span-6">
-            <Wordmark light />
+            <Wordmark light dark />
             <p className="mt-5 max-w-xs text-sm leading-6 text-white/65">
               {t.footerNote}
             </p>
@@ -197,7 +207,7 @@ export function SiteShell({ children }: { children: React.ReactNode }) {
       <Header />
       {children}
       <Footer />
-      {pathname !== "/careers" && (
+      {pathname !== "/jobs" && (
         <div
           className={cn(
             "fixed inset-x-0 bottom-0 z-40 border-t border-ink/10 bg-white/95 p-3 backdrop-blur-md md:hidden",
@@ -205,7 +215,7 @@ export function SiteShell({ children }: { children: React.ReactNode }) {
           )}
         >
           <Button asChild className="w-full">
-            <Link href="/careers">
+            <Link href="/jobs">
               {t.apply}
               <ArrowUpRight size={18} />
             </Link>

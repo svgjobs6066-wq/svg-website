@@ -323,22 +323,6 @@ export function Workspace({
     );
   }
   const nav = [
-    ...(role === "admin"
-      ? [
-          {
-            key: "supervisors",
-            href: "/admin/supervisors",
-            label: "Supervisors",
-            icon: Users,
-          },
-          {
-            key: "logs",
-            href: "/admin/logs",
-            label: "Audit logs",
-            icon: LayoutDashboard,
-          },
-        ]
-      : []),
     {
       key: "dashboard",
       href: "/admin",
@@ -357,6 +341,22 @@ export function Workspace({
       label: "Openings",
       icon: BriefcaseBusiness,
     },
+    ...(role === "admin"
+      ? [
+          {
+            key: "supervisors",
+            href: "/admin/supervisors",
+            label: "Supervisors",
+            icon: Users,
+          },
+          {
+            key: "logs",
+            href: "/admin/logs",
+            label: "Audit logs",
+            icon: LayoutDashboard,
+          },
+        ]
+      : []),
   ];
   return (
     <div className="min-h-screen bg-paper">

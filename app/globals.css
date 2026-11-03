@@ -1,13 +1,39 @@
 @import "tailwindcss";
 
+@keyframes affiliate-scroll {
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+.affiliate-track {
+  animation: affiliate-scroll 35s linear infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .affiliate-track {
+    animation: none;
+  }
+}
+
 @keyframes brand-intro {
-  from { opacity: 0; transform: translateY(5px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(5px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 @keyframes brand-rule {
-  from { transform: scaleX(0); }
-  to { transform: scaleX(1); }
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
 }
 
 .brand-intro {
